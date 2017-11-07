@@ -21,8 +21,8 @@
  *          Mohit P. Tahiliani <tahiliani@nitk.edu.in>
  */
 
-#ifndef FQ_CODEL_QUEUE_DISC
-#define FQ_CODEL_QUEUE_DISC
+#ifndef SFQ_QUEUE_DISC
+#define SFQ_QUEUE_DISC
 
 #include "ns3/queue-disc.h"
 #include "ns3/object-factory.h"
@@ -34,7 +34,7 @@ namespace ns3 {
 /**
  * \ingroup traffic-control
  *
- * \brief A flow queue used by the FqCoDel queue disc
+ * \brief A flow queue used by the Sfq queue disc
  */
 
 class sfqFlow : public QueueDiscClass {
@@ -97,7 +97,7 @@ private:
 /**
  * \ingroup traffic-control
  *
- * \brief A FqCoDel packet queue disc
+ * \brief An Sfq packet queue disc
  */
 
 class SfqQueueDisc : public QueueDisc {
@@ -139,10 +139,10 @@ private:
    * \brief Drop a packet from the head of the queue with the largest current byte count
    * \return the index of the queue with the largest current byte count
    */
-  uint32_t SfqCoDelDrop (void);
+  uint32_t SfqDrop (void);
 
-  std::string m_interval;    //!< CoDel interval attribute
-  std::string m_target;      //!< CoDel target attribute
+  std::string m_interval;    //!< Interval attribute
+  std::string m_target;      //!< Target attribute
   uint32_t m_limit;          //!< Maximum number of packets in the queue disc
   uint32_t m_quantum;        //!< Deficit assigned to flows at each round
   uint32_t m_flows;          //!< Number of flow queues
@@ -161,4 +161,4 @@ private:
 
 } // namespace ns3
 
-#endif /* FQ_CODEL_QUEUE_DISC */
+#endif /* SFQ_QUEUE_DISC */

@@ -27,132 +27,132 @@
 
 namespace ns3 {
 
-NS_LOG_COMPONENT_DEFINE ("SfqCoDelQueueDisc");
+NS_LOG_COMPONENT_DEFINE ("SfqQueueDisc");
 
-NS_OBJECT_ENSURE_REGISTERED (SfqCoDelFlow);
+NS_OBJECT_ENSURE_REGISTERED (SfqFlow);
 
-TypeId SfqCoDelFlow::GetTypeId (void)
+TypeId SfqFlow::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SfqCoDelFlow")
+  static TypeId tid = TypeId ("ns3::SfqFlow")
     .SetParent<QueueDiscClass> ()
     .SetGroupName ("TrafficControl")
-    .AddConstructor<SfqCoDelFlow> ()
+    .AddConstructor<SfqFlow> ()
   ;
   return tid;
 }
 
-SfqCoDelFlow::SfqCoDelFlow ()
+SfqFlow::SfqFlow ()
   : m_deficit (0),
     m_status (INACTIVE)
 {
   NS_LOG_FUNCTION (this);
 }
 
-SfqCoDelFlow::~SfqCoDelFlow ()
+SfqFlow::~SfqFlow ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-SfqCoDelFlow::SetDeficit (uint32_t deficit)
+SfqFlow::SetDeficit (uint32_t deficit)
 {
   NS_LOG_FUNCTION (this << deficit);
   m_deficit = deficit;
 }
 
 int32_t
-SfqCoDelFlow::GetDeficit (void) const
+SfqFlow::GetDeficit (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_deficit;
 }
 
 void
-SfqCoDelFlow::IncreaseDeficit (int32_t deficit)
+SfqFlow::IncreaseDeficit (int32_t deficit)
 {
   NS_LOG_FUNCTION (this << deficit);
   m_deficit += deficit;
 }
 
 void
-SfqCoDelFlow::SetStatus (FlowStatus status)
+SfqFlow::SetStatus (FlowStatus status)
 {
   NS_LOG_FUNCTION (this);
   m_status = status;
 }
 
-SfqCoDelFlow::FlowStatus
-SfqCoDelFlow::GetStatus (void) const
+SfqFlow::FlowStatus
+SfqFlow::GetStatus (void) const
 {
   NS_LOG_FUNCTION (this);
   return m_status;
 }
 
 
-NS_OBJECT_ENSURE_REGISTERED (SfqCoDelQueueDisc);
+NS_OBJECT_ENSURE_REGISTERED (SfqQueueDisc);
 
-TypeId SfqCoDelQueueDisc::GetTypeId (void)
+TypeId SfqQueueDisc::GetTypeId (void)
 {
-  static TypeId tid = TypeId ("ns3::SfqCoDelQueueDisc")
+  static TypeId tid = TypeId ("ns3::SfqQueueDisc")
     .SetParent<QueueDisc> ()
     .SetGroupName ("TrafficControl")
-    .AddConstructor<SfqCoDelQueueDisc> ()
+    .AddConstructor<SfqQueueDisc> ()
     .AddAttribute ("Interval",
-                   "The CoDel algorithm interval for each FQCoDel queue",
+                   "The algorithm interval for each SFQ queue",
                    StringValue ("100ms"),
-                   MakeStringAccessor (&SfqCoDelQueueDisc::m_interval),
+                   MakeStringAccessor (&SfqQueueDisc::m_interval),
                    MakeStringChecker ())
     .AddAttribute ("Target",
-                   "The CoDel algorithm target queue delay for each FQCoDel queue",
+                   "The algorithm target queue delay for each SFQ queue",
                    StringValue ("5ms"),
-                   MakeStringAccessor (&SfqCoDelQueueDisc::m_target),
+                   MakeStringAccessor (&SfqQueueDisc::m_target),
                    MakeStringChecker ())
     .AddAttribute ("PacketLimit",
                    "The hard limit on the real queue size, measured in packets",
                    UintegerValue (10 * 1024),
-                   MakeUintegerAccessor (&SfqCoDelQueueDisc::m_limit),
+                   MakeUintegerAccessor (&SfqQueueDisc::m_limit),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Flows",
                    "The number of queues into which the incoming packets are classified",
                    UintegerValue (1024),
-                   MakeUintegerAccessor (&SfqCoDelQueueDisc::m_flows),
+                   MakeUintegerAccessor (&SfqQueueDisc::m_flows),
                    MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("DropBatchSize",
                    "The maximum number of packets dropped from the fat flow",
                    UintegerValue (64),
-                   MakeUintegerAccessor (&SfqCoDelQueueDisc::m_dropBatchSize),
+                   MakeUintegerAccessor (&SfqQueueDisc::m_dropBatchSize),
                    MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
 
-SfqCoDelQueueDisc::SfqCoDelQueueDisc ()
+SfqQueueDisc::SfqQueueDisc ()
   : m_quantum (0),
     m_overlimitDroppedPackets (0)
 {
   NS_LOG_FUNCTION (this);
 }
 
-SfqCoDelQueueDisc::~SfqCoDelQueueDisc ()
+SfqQueueDisc::~SfqQueueDisc ()
 {
   NS_LOG_FUNCTION (this);
 }
 
 void
-SfqCoDelQueueDisc::SetQuantum (uint32_t quantum)
+SfqQueueDisc::SetQuantum (uint32_t quantum)
 {
   NS_LOG_FUNCTION (this << quantum);
   m_quantum = quantum;
 }
 
 uint32_t
-SfqCoDelQueueDisc::GetQuantum (void) const
+SfqQueueDisc::GetQuantum (void) const
 {
   return m_quantum;
 }
 
 bool
-SfqCoDelQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
+SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
   // ***add filters to the classify fucntion ***
@@ -167,11 +167,11 @@ SfqCoDelQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 
   uint32_t h = ret % m_flows;
 
-  Ptr<SfqCoDelFlow> flow;
+  Ptr<SfqFlow> flow;
   if (m_flowsIndices.find (h) == m_flowsIndices.end ())
     {
       NS_LOG_DEBUG ("Creating a new flow queue with index " << h);
-      flow = m_flowFactory.Create<SfqCoDelFlow> ();
+      flow = m_flowFactory.Create<SfqFlow> ();
       Ptr<QueueDisc> qd = m_queueDiscFactory.Create<QueueDisc> ();
       qd->Initialize ();
       flow->SetQueueDisc (qd);
@@ -181,12 +181,12 @@ SfqCoDelQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
   else
     {
-      flow = StaticCast<SfqCoDelFlow> (GetQueueDiscClass (m_flowsIndices[h]));
+      flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
 
-/*  if (flow->GetStatus () == SfqCoDelFlow::INACTIVE)
+/*  if (flow->GetStatus () == SfqFlow::INACTIVE)
     {
-      flow->SetStatus (SfqCoDelFlow::NEW_FLOW);
+      flow->SetStatus (SfqFlow::NEW_FLOW);
       flow->SetDeficit (m_quantum);
       m_newFlows.push_back (flow);
     }
@@ -198,18 +198,18 @@ SfqCoDelQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 
   if (GetNPackets () > m_limit)
     {
-      FqCoDelDrop ();
+      SfqDrop ();
     }
 
   return true;
 }
 // TODO: Modify this
 Ptr<QueueDiscItem>
-SfqCoDelQueueDisc::DoDequeue (void)
+SfqQueueDisc::DoDequeue (void)
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<SfqCoDelFlow> flow;
+  Ptr<SfqFlow> flow;
   Ptr<QueueDiscItem> item;
 
   do
@@ -223,7 +223,7 @@ SfqCoDelQueueDisc::DoDequeue (void)
           if (flow->GetDeficit () <= 0)
             {
               flow->IncreaseDeficit (m_quantum);
-              flow->SetStatus (SfqCoDelFlow::OLD_FLOW);
+              flow->SetStatus (SfqFlow::OLD_FLOW);
               m_oldFlows.push_back (flow);
               m_newFlows.pop_front ();
             }
@@ -264,13 +264,13 @@ SfqCoDelQueueDisc::DoDequeue (void)
           NS_LOG_DEBUG ("Could not get a packet from the selected flow queue");
           if (!m_newFlows.empty ())
             {
-              flow->SetStatus (SfqCoDelFlow::OLD_FLOW);
+              flow->SetStatus (SfqFlow::OLD_FLOW);
               m_oldFlows.push_back (flow);
               m_newFlows.pop_front ();
             }
           else
             {
-              flow->SetStatus (SfqCoDelFlow::INACTIVE);
+              flow->SetStatus (SfqFlow::INACTIVE);
               m_oldFlows.pop_front ();
             }
         }
@@ -286,11 +286,11 @@ SfqCoDelQueueDisc::DoDequeue (void)
 }
 
 Ptr<const QueueDiscItem>
-SfqCoDelQueueDisc::DoPeek (void) const
+SfqQueueDisc::DoPeek (void) const
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<SfqCoDelFlow> flow;
+  Ptr<SfqFlow> flow;
 
   if (!m_newFlows.empty ())
     {
@@ -312,24 +312,24 @@ SfqCoDelQueueDisc::DoPeek (void) const
 }
 
 bool
-SfqCoDelQueueDisc::CheckConfig (void)
+SfqQueueDisc::CheckConfig (void)
 {
   NS_LOG_FUNCTION (this);
   if (GetNQueueDiscClasses () > 0)
     {
-      NS_LOG_ERROR ("SfqCoDelQueueDisc cannot have classes");
+      NS_LOG_ERROR ("SfqQueueDisc cannot have classes");
       return false;
     }
 
   if (GetNPacketFilters () == 0)
     {
-      NS_LOG_ERROR ("SfqCoDelQueueDisc needs at least a packet filter");
+      NS_LOG_ERROR ("SfqQueueDisc needs at least a packet filter");
       return false;
     }
 
   if (GetNInternalQueues () > 0)
     {
-      NS_LOG_ERROR ("SfqCoDelQueueDisc cannot have internal queues");
+      NS_LOG_ERROR ("SfqQueueDisc cannot have internal queues");
       return false;
     }
 
@@ -337,7 +337,7 @@ SfqCoDelQueueDisc::CheckConfig (void)
 }
 
 void
-SfqCoDelQueueDisc::InitializeParams (void)
+SfqQueueDisc::InitializeParams (void)
 {
   NS_LOG_FUNCTION (this);
 
@@ -351,9 +351,9 @@ SfqCoDelQueueDisc::InitializeParams (void)
       NS_LOG_DEBUG ("Setting the quantum to the MTU of the device: " << m_quantum);
     }
 
-  m_flowFactory.SetTypeId ("ns3::SfqCoDelFlow");
+  m_flowFactory.SetTypeId ("ns3::SfqFlow");
 
-  m_queueDiscFactory.SetTypeId ("ns3::CoDelQueueDisc");
+  m_queueDiscFactory.SetTypeId ("ns3::QueueDisc");
   m_queueDiscFactory.Set ("Mode", EnumValue (Queue::QUEUE_MODE_PACKETS));
   m_queueDiscFactory.Set ("MaxPackets", UintegerValue (m_limit + 1));
   m_queueDiscFactory.Set ("Interval", StringValue (m_interval));
@@ -361,7 +361,7 @@ SfqCoDelQueueDisc::InitializeParams (void)
 }
 
 uint32_t
-SfqCoDelQueueDisc::FqCoDelDrop (void)
+SfqQueueDisc::SfqDrop (void)
 {
   NS_LOG_FUNCTION (this);
 
