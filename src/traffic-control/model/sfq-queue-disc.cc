@@ -93,6 +93,7 @@ SfqFlow::GetStatus (void) const
 int32_t hashfucntion(Ptr<QueueDiscItem> item)
 {
   Address dest = Item.GetAddress();
+  // seq is a number in the range 0-31
   return ((src >> seq)|(src << (32 - seq)))+dest;
 }
 
