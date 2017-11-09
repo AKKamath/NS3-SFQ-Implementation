@@ -89,6 +89,15 @@ SfqFlow::GetStatus (void) const
 }
 
 
+/*
+int32_t hashfucntion(Ptr<QueueDiscItem> item)
+{
+  return ((src >> seq)|(src << (32 - seq)))+dest;
+}
+
+*/
+
+
 NS_OBJECT_ENSURE_REGISTERED (SfqQueueDisc);
 
 TypeId SfqQueueDisc::GetTypeId (void)
