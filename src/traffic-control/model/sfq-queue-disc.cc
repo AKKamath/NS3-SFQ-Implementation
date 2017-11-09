@@ -92,6 +92,7 @@ SfqFlow::GetStatus (void) const
 /*
 int32_t hashfucntion(Ptr<QueueDiscItem> item)
 {
+  Address dest = Item.GetAddress();
   return ((src >> seq)|(src << (32 - seq)))+dest;
 }
 
