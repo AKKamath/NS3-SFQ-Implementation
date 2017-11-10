@@ -35,7 +35,7 @@ NS_LOG_COMPONENT_DEFINE ("Ipv6PacketFilter");
 
 NS_OBJECT_ENSURE_REGISTERED (Ipv6PacketFilter);
 
-TypeId 
+TypeId
 Ipv6PacketFilter::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::Ipv6PacketFilter")
@@ -141,6 +141,75 @@ FqCoDelIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
 
   /* Linux calculates the jhash2 (jenkins hash), we calculate the murmur3 */
   uint32_t hash = Hash32 ((char*) buf, 41);
+
+  NS_LOG_DEBUG ("Found Ipv6 packet; hash of the five tuple " << hash);
+
+  return hash;
+}
+
+
+NS_OBJECT_ENSURE_REGISTERED (FqCoDelIpv6PacketFilter);
+
+TypeId
+FqCoDelIpv6PacketFilter::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::SfqIpv6PacketFilter")
+    .SetParent<Ipv6PacketFilter> ()
+    .SetGroupName ("Internet")
+    .AddConstructor<SfqCoDelIpv6PacketFilter> ()
+    .AddAttribute ("Perturbation Time",
+                   "The time duration after which salt used as an additional input to the hash function is changed",
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&SfqIpv6PacketFilter::m_perturb_time),
+                   MakeUintegerChecker<uint32_t> ())
+  ;
+  return tid;
+}
+
+SfqIpv6PacketFilter::SfqIpv6PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+  if(m_perturb_time != 0)
+    m_perturbEvent = Simulator::Schedule (m_perturb_time, &SfqIpv6PacketFilter::PerturbHash, this);
+}
+
+SfqIpv6PacketFilter::~SfqIpv6PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+SfqIpv6PacketFilter::PerturbHash()
+{
+  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+  m_perturbation = x->GetInteger();
+  m_perturbEvent = Simulator::Schedule (m_perturb_time, &SfqIpv6PacketFilter::PerturbHash, this);
+}
+
+int32_t
+SfqIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
+{
+  NS_LOG_FUNCTION (this << item);
+  Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
+
+  NS_ASSERT (ipv6Item != 0);
+
+  Ipv6Header hdr = ipv6Item->GetHeader ();
+  Ipv6Address src = hdr.GetSourceAddress ();
+
+  Ptr<Packet> pkt = ipv6Item->GetPacket ();
+
+  /* serialize the 5-tuple and the perturbation in buf */
+  uint8_t buf[36];
+  src.Serialize (buf);
+  dest.Serialize (buf + 16);
+  buf[32] = (m_perturbation >> 24) & 0xff;
+  buf[33] = (m_perturbation >> 16) & 0xff;
+  buf[34] = (m_perturbation >> 8) & 0xff;
+  buf[35] = m_perturbation & 0xff;
+
+  /* Linux calculates the jhash2 (jenkins hash), we calculate the murmur3 */
+  uint32_t hash = Hash32 ((char*) buf, 36);
 
   NS_LOG_DEBUG ("Found Ipv6 packet; hash of the five tuple " << hash);
 

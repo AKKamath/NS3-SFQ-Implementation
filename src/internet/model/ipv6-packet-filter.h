@@ -76,6 +76,26 @@ private:
   uint32_t m_perturbation; //!< hash perturbation value
 };
 
+
+class SfqIpv6PacketFilter : public Ipv6PacketFilter {
+public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
+  static TypeId GetTypeId (void);
+
+  SfqIpv6PacketFilter ();
+  virtual ~SfqIpv6PacketFilter ();
+
+private:
+  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+
+  uint32_t m_perturbation; //!< hash perturbation value
+  uint32_t m_perturb_time; //!< interval after which perturbation takes place
+  EventId m_perturbEvent;  //!< Event used to change the value of perturbation
+};
+
 } // namespace ns3
 
 #endif /* IPV6_PACKET_FILTER */
