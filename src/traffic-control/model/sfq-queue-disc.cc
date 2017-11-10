@@ -88,18 +88,6 @@ SfqFlow::GetStatus (void) const
   return m_status;
 }
 
-
-/*
-int32_t hashfucntion(Ptr<QueueDiscItem> item)
-{
-  Address dest = Item.GetAddress();
-  // seq is a number in the range 0-31
-  return ((src >> seq)|(src << (32 - seq)))+dest;
-}
-
-*/
-
-
 NS_OBJECT_ENSURE_REGISTERED (SfqQueueDisc);
 
 TypeId SfqQueueDisc::GetTypeId (void)
