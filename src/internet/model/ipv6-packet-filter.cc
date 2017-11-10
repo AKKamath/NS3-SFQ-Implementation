@@ -148,10 +148,10 @@ FqCoDelIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
 }
 
 
-NS_OBJECT_ENSURE_REGISTERED (FqCoDelIpv6PacketFilter);
+NS_OBJECT_ENSURE_REGISTERED (SfqCoDelIpv6PacketFilter);
 
 TypeId
-FqCoDelIpv6PacketFilter::GetTypeId (void)
+SfqCoDelIpv6PacketFilter::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SfqIpv6PacketFilter")
     .SetParent<Ipv6PacketFilter> ()
