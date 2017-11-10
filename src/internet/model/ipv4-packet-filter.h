@@ -76,6 +76,33 @@ private:
   uint32_t m_perturbation; //!< hash perturbation value
 };
 
+/**
+ * \ingroup internet
+ *
+ * SfqIpv4PacketFilter is the filter to be added to the SFQ
+ * queue disc to simulate the behavior of the sfq Linux queue disc.
+ *
+ */
+class SfqIpv4PacketFilter : public Ipv4PacketFilter {
+public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
+  static TypeId GetTypeId (void);
+
+  SfqIpv4PacketFilter ();
+  virtual ~SfqIpv4PacketFilter ();
+
+private:
+  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+  virtual void PerturbHash();
+  
+  uint32_t m_perturbation; //!< hash perturbation value
+  uint32_t m_perturb_time; //!< interval after which perturbation takes place
+  EventId m_perturbEvent;  //!< Event used to change the value of perturbation
+};
+
 } // namespace ns3
 
 #endif /* IPV4_PACKET_FILTER */

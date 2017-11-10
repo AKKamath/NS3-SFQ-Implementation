@@ -148,4 +148,74 @@ FqCoDelIpv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
   return hash;
 }
 
+// ------------------------------------------------------------------------- //
+
+NS_OBJECT_ENSURE_REGISTERED (SfqIpv4PacketFilter);
+
+TypeId
+SfqIpv4PacketFilter::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::SfqIpv4PacketFilter")
+    .SetParent<Ipv4PacketFilter> ()
+    .SetGroupName ("Internet")
+    .AddConstructor<SfqIpv4PacketFilter> ()
+    .AddAttribute ("Perturbation Time",
+                   "The time duration after which salt used as an additional input to the hash function is changed",
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&SfqIpv4PacketFilter::m_perturb_time),
+                   MakeUintegerChecker<uint32_t> ())
+  ;
+  return tid;
+}
+
+SfqIpv4PacketFilter::SfqIpv4PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+  if(m_perturb_time != 0)
+    m_perturbEvent = Simulator::Schedule (m_perturb_time, &SfqIpv4PacketFilter::PerturbHash, this);
+}
+
+SfqIpv4PacketFilter::~SfqIpv4PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+void
+SfqIpv4PacketFilter::PerturbHash()
+{
+  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+  m_perturbation = x->GetInteger();
+  m_perturbEvent = Simulator::Schedule (m_perturb_time, &SfqIpv4PacketFilter::PerturbHash, this);
+}
+
+int32_t
+SfqIpv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
+{
+  NS_LOG_FUNCTION (this << item);
+  Ptr<Ipv4QueueDiscItem> ipv4Item = DynamicCast<Ipv4QueueDiscItem> (item);
+
+  NS_ASSERT (ipv4Item != 0);
+
+  Ipv4Address src = hdr.GetSource ();
+  Ipv4Address dest = hdr.GetDestination ();
+
+  Ptr<Packet> pkt = ipv4Item->GetPacket ();
+
+  /* serialize the 5-tuple and the perturbation in buf */
+  uint8_t buf[12];
+  src.Serialize (buf);
+  dest.Serialize (buf + 4);
+  buf[8] = (m_perturbation >> 24) & 0xff;
+  buf[9] = (m_perturbation >> 16) & 0xff;
+  buf[10] = (m_perturbation >> 8) & 0xff;
+  buf[11] = m_perturbation & 0xff;
+
+  /* Linux calculates the jhash2 (jenkins hash), we calculate the murmur3 */
+  uint32_t hash = Hash32 ((char*) buf, 12);
+
+  NS_LOG_DEBUG ("Found Ipv4 packet; hash value " << hash);
+
+  return hash;
+}
+
 } // namespace ns3
