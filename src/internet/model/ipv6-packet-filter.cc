@@ -148,15 +148,15 @@ FqCoDelIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
 }
 
 
-NS_OBJECT_ENSURE_REGISTERED (SfqCoDelIpv6PacketFilter);
+NS_OBJECT_ENSURE_REGISTERED (SfqIpv6PacketFilter);
 
 TypeId
-SfqCoDelIpv6PacketFilter::GetTypeId (void)
+SfqIpv6PacketFilter::GetTypeId (void)
 {
   static TypeId tid = TypeId ("ns3::SfqIpv6PacketFilter")
     .SetParent<Ipv6PacketFilter> ()
     .SetGroupName ("Internet")
-    .AddConstructor<SfqCoDelIpv6PacketFilter> ()
+    .AddConstructor<SfqIpv6PacketFilter> ()
     .AddAttribute ("Perturbation Time",
                    "The time duration after which salt used as an additional input to the hash function is changed",
                    UintegerValue (0),
