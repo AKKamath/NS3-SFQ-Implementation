@@ -98,7 +98,11 @@ FqCoDelIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   NS_LOG_FUNCTION (this << item);
   Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
 
-  NS_ASSERT (ipv6Item != 0);
+  if(!ipv6Item)
+  {
+    NS_LOG_DEBUG("No match");
+    return PacketFilter::PF_NO_MATCH;
+  }
 
   Ipv6Header hdr = ipv6Item->GetHeader ();
   Ipv6Address src = hdr.GetSourceAddress ();
@@ -192,7 +196,11 @@ SfqIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   NS_LOG_FUNCTION (this << item);
   Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
 
-  NS_ASSERT (ipv6Item != 0);
+  if(!ipv6Item)
+  {
+    NS_LOG_DEBUG("No match");
+    return PacketFilter::PF_NO_MATCH;
+  }
 
   Ipv6Header hdr = ipv6Item->GetHeader ();
   Ipv6Address src = hdr.GetSourceAddress ();
