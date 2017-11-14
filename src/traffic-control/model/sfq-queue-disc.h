@@ -149,8 +149,7 @@ private:
 
   uint32_t m_overlimitDroppedPackets; //!< Number of overlimit dropped packets
 
-  std::list<Ptr<sfqFlow> > m_newFlows;    //!< The list of new flows
-  //std::list<Ptr<sfqFlow> > m_oldFlows;    //!< The list of old flows
+  std::list<Ptr<sfqFlow> > m_flowList;    //!< The list of new flows
 
   std::map<uint32_t, uint32_t> m_flowsIndices;    //!< Map with the index of class for each flow
 

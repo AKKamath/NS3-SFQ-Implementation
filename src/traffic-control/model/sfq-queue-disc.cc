@@ -191,7 +191,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   {
     flow->SetStatus (SfqFlow::SFQ_IN_USE);
     flow->SetAllot (m_quantum);
-    m_newFlows.push_back (flow);
+    m_flowList.push_front (flow);
   }
   
   flow->GetQueueDisc ()->Enqueue (item);
@@ -206,7 +206,6 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   return true;
 }
 
-
 Ptr<QueueDiscItem>
 SfqQueueDisc::DoDequeue (void)
 {
@@ -219,15 +218,15 @@ SfqQueueDisc::DoDequeue (void)
     {
       bool found = false;
 
-      while (!found && !m_newFlows.empty ())
+      while (!found && !m_flowList.empty ())
         {
-          flow = m_newFlows.front ();
+          flow = m_flowList.front ();
 
           if (flow->GetAllot () <= 0)
             {
               flow->IncreaseAllot (m_quantum);
-              m_newFlows.push_back (flow);
-              m_newFlows.pop_front ();
+              m_flowList.push_back (flow);
+              m_flowList.pop_front ();
             }
           else
             {
@@ -246,14 +245,10 @@ SfqQueueDisc::DoDequeue (void)
       if (!item)
         {
           NS_LOG_DEBUG ("Could not get a packet from the selected flow queue");
-          if (!m_newFlows.empty ())
+          if (!m_flowList.empty ())
             {
-              m_newFlows.push_back (flow);
-              m_newFlows.pop_front ();
-            }
-          else
-            {
-              m_newFlows.pop_front ();
+              flow->SetStatus(SfqFlow::SFQ_EMPTY_SLOT);
+              m_flowList.pop_front ();
             }
         }
       else
@@ -274,9 +269,9 @@ SfqQueueDisc::DoPeek (void) const
 
   Ptr<SfqFlow> flow;
 
-  if (!m_newFlows.empty ())
+  if (!m_flowList.empty ())
     {
-      flow = m_newFlows.front ();
+      flow = m_flowList.front ();
     }
 
   return flow->GetQueueDisc ()->Peek ();
