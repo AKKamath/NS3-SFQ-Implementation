@@ -42,8 +42,8 @@ TypeId SfqFlow::GetTypeId (void)
 }
 
 SfqFlow::SfqFlow ()
-  : m_deficit (0),
-    m_status (INACTIVE)
+  : m_allot (0),
+    //m_status (INACTIVE)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -54,38 +54,24 @@ SfqFlow::~SfqFlow ()
 }
 
 void
-SfqFlow::SetDeficit (uint32_t deficit)
+SfqFlow::SetAllot (uint32_t allot)
 {
-  NS_LOG_FUNCTION (this << deficit);
-  m_deficit = deficit;
+  NS_LOG_FUNCTION (this << allot);
+  m_allot = allot;
 }
 
 int32_t
-SfqFlow::GetDeficit (void) const
+SfqFlow::GetAllot (void) const
 {
   NS_LOG_FUNCTION (this);
-  return m_deficit;
+  return m_allot;
 }
 
 void
-SfqFlow::IncreaseDeficit (int32_t deficit)
+SfqFlow::IncreaseAllot (int32_t allot)
 {
-  NS_LOG_FUNCTION (this << deficit);
-  m_deficit += deficit;
-}
-
-void
-SfqFlow::SetStatus (FlowStatus status)
-{
-  NS_LOG_FUNCTION (this);
-  m_status = status;
-}
-
-SfqFlow::FlowStatus
-SfqFlow::GetStatus (void) const
-{
-  NS_LOG_FUNCTION (this);
-  return m_status;
+  NS_LOG_FUNCTION (this << allot);
+  m_allot += allot;
 }
 
 NS_OBJECT_ENSURE_REGISTERED (SfqQueueDisc);
@@ -156,12 +142,16 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   NS_LOG_FUNCTION (this << item);
   // ***add filters to the classify fucntion ***
   int32_t ret = Classify (item); //classify returns a hash function based on the packet filters
+  unint32_t h;
 
   if (ret == PacketFilter::PF_NO_MATCH)
     {
       NS_LOG_ERROR ("No filter has been able to classify this packet, drop it.");
-      Drop (item);
-      return false;
+      h = m_flows; // place all unfiltered packets into a seperate flow queue
+    }
+    else
+    {
+      h = ret % m_flows;
     }
 
   uint32_t h = ret % m_flows;
@@ -183,14 +173,6 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
 
-/*  if (flow->GetStatus () == SfqFlow::INACTIVE)
-    {
-      flow->SetStatus (SfqFlow::NEW_FLOW);
-      flow->SetDeficit (m_quantum);
-      m_newFlows.push_back (flow);
-    }
-*/
-
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
@@ -202,7 +184,8 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 
   return true;
 }
-// TODO: Modify this
+
+
 Ptr<QueueDiscItem>
 SfqQueueDisc::DoDequeue (void)
 {
@@ -219,37 +202,18 @@ SfqQueueDisc::DoDequeue (void)
         {
           flow = m_newFlows.front ();
 
-          if (flow->GetDeficit () <= 0)
+          if (flow->GetAllot () <= 0)
             {
-              flow->IncreaseDeficit (m_quantum);
-              flow->SetStatus (SfqFlow::OLD_FLOW);
-              m_oldFlows.push_back (flow);
+              flow->IncreaseAllot (m_quantum);
+              m_newFlows.push_back (flow);
               m_newFlows.pop_front ();
             }
           else
             {
-              NS_LOG_DEBUG ("Found a new flow with positive deficit");
+              NS_LOG_DEBUG ("Found a new flow with positive value");
               found = true;
             }
         }
-
-      while (!found && !m_oldFlows.empty ())
-        {
-          flow = m_oldFlows.front ();
-
-          if (flow->GetDeficit () <= 0)
-            {
-              flow->IncreaseDeficit (m_quantum);
-              m_oldFlows.push_back (flow);
-              m_oldFlows.pop_front ();
-            }
-          else
-            {
-              NS_LOG_DEBUG ("Found an old flow with positive deficit");
-              found = true;
-            }
-        }
-
       if (!found)
         {
           NS_LOG_DEBUG ("No flow found to dequeue a packet");
@@ -263,14 +227,12 @@ SfqQueueDisc::DoDequeue (void)
           NS_LOG_DEBUG ("Could not get a packet from the selected flow queue");
           if (!m_newFlows.empty ())
             {
-              flow->SetStatus (SfqFlow::OLD_FLOW);
-              m_oldFlows.push_back (flow);
+              m_newFlows.push_back (flow);
               m_newFlows.pop_front ();
             }
           else
             {
-              flow->SetStatus (SfqFlow::INACTIVE);
-              m_oldFlows.pop_front ();
+              m_newFlows.pop_front ();
             }
         }
       else
@@ -279,7 +241,7 @@ SfqQueueDisc::DoDequeue (void)
         }
     } while (item == 0);
 
-  flow->IncreaseDeficit (-item->GetPacketSize ());
+  flow->IncreaseAllot (-item->GetPacketSize ());
 
   return item;
 }
@@ -294,17 +256,6 @@ SfqQueueDisc::DoPeek (void) const
   if (!m_newFlows.empty ())
     {
       flow = m_newFlows.front ();
-    }
-  else
-    {
-      if (!m_oldFlows.empty ())
-        {
-          flow = m_oldFlows.front ();
-        }
-      else
-        {
-          return 0;
-        }
     }
 
   return flow->GetQueueDisc ()->Peek ();

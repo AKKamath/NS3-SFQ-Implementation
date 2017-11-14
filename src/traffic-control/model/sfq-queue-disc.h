@@ -50,47 +50,47 @@ public:
   sfqFlow ();
 
   virtual ~sfqFlow ();
-
+  // UNUSED
   /**
    * \enum FlowStatus
    * \brief Used to determine the status of this flow queue
    */
-  enum FlowStatus
+  /*enum FlowStatus
     {
       INACTIVE,
       NEW_FLOW,
       OLD_FLOW
-    };
+    };*/
 
   /**
    * \brief Set the deficit for this flow
    * \param deficit the deficit for this flow
    */
-  void SetDeficit (uint32_t deficit);
+  void SetAllot (uint32_t allot);
   /**
    * \brief Get the deficit for this flow
    * \return the deficit for this flow
    */
-  int32_t GetDeficit (void) const;
+  int32_t GetAllot (void) const;
   /**
    * \brief Increase the deficit for this flow
    * \param deficit the amount by which the deficit is to be increased
    */
-  void IncreaseDeficit (int32_t deficit);
+  void IncreaseAllot (int32_t allot);
   /**
    * \brief Set the status for this flow
    * \param status the status for this flow
    */
-  void SetStatus (FlowStatus status);
+  //void SetStatus (FlowStatus status);
   /**
    * \brief Get the status of this flow
    * \return the status of this flow
    */
-  FlowStatus GetStatus (void) const;
+  //FlowStatus GetStatus (void) const;
 
 private:
-  int32_t m_deficit;    //!< the deficit for this flow
-  FlowStatus m_status;  //!< the status of this flow
+  int32_t m_allot;    //!< the deficit for this flow
+  //FlowStatus m_status;  //!< the status of this flow
 };
 
 
@@ -151,7 +151,7 @@ private:
   uint32_t m_overlimitDroppedPackets; //!< Number of overlimit dropped packets
 
   std::list<Ptr<sfqFlow> > m_newFlows;    //!< The list of new flows
-  std::list<Ptr<sfqFlow> > m_oldFlows;    //!< The list of old flows
+  //std::list<Ptr<sfqFlow> > m_oldFlows;    //!< The list of old flows
 
   std::map<uint32_t, uint32_t> m_flowsIndices;    //!< Map with the index of class for each flow
 
