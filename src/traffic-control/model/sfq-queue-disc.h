@@ -50,17 +50,16 @@ public:
   sfqFlow ();
 
   virtual ~sfqFlow ();
-  // UNUSED
+
   /**
    * \enum FlowStatus
    * \brief Used to determine the status of this flow queue
    */
-  /*enum FlowStatus
+  enum FlowStatus
     {
-      INACTIVE,
-      NEW_FLOW,
-      OLD_FLOW
-    };*/
+      SFQ_EMPTY_SLOT,
+      SFQ_IN_USE
+    };
 
   /**
    * \brief Set the deficit for this flow
@@ -81,16 +80,16 @@ public:
    * \brief Set the status for this flow
    * \param status the status for this flow
    */
-  //void SetStatus (FlowStatus status);
+  void SetStatus (FlowStatus status);
   /**
    * \brief Get the status of this flow
    * \return the status of this flow
    */
-  //FlowStatus GetStatus (void) const;
+  FlowStatus GetStatus (void) const;
 
 private:
   int32_t m_allot;    //!< the deficit for this flow
-  //FlowStatus m_status;  //!< the status of this flow
+  FlowStatus m_status;  //!< the status of this flow
 };
 
 

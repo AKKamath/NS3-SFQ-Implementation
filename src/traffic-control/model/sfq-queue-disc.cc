@@ -43,7 +43,7 @@ TypeId SfqFlow::GetTypeId (void)
 
 SfqFlow::SfqFlow ()
   : m_allot (0),
-    //m_status (INACTIVE)
+    m_status (SFQ_EMPTY_SLOT)
 {
   NS_LOG_FUNCTION (this);
 }
