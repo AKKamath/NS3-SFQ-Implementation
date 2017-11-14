@@ -74,6 +74,20 @@ SfqFlow::IncreaseAllot (int32_t allot)
   m_allot += allot;
 }
 
+void
+SfqFlow::SetStatus (FlowStatus status)
+{
+  NS_LOG_FUNCTION (this);
+  m_status = status;
+}
+
+SfqFlow::FlowStatus
+SfqFlow::GetStatus (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return m_status;
+}
+  
 NS_OBJECT_ENSURE_REGISTERED (SfqQueueDisc);
 
 TypeId SfqQueueDisc::GetTypeId (void)
