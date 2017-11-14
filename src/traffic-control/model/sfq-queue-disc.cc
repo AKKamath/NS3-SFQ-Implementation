@@ -187,6 +187,13 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
 
+  if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
+  {
+    flow->SetStatus (SfqFlow::SFQ_IN_USE);
+    flow->SetAllot (m_quantum);
+    m_newFlows.push_back (flow);
+  }
+  
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
