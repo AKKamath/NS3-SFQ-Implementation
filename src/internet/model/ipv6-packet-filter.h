@@ -90,6 +90,7 @@ public:
 
 private:
   virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+  virtual void PerturbHash();
 
   uint32_t m_perturbation; //!< hash perturbation value
   uint32_t m_perturb_time; //!< interval after which perturbation takes place
