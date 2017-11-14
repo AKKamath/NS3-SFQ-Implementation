@@ -28,6 +28,10 @@
 #include "ns3/udp-header.h"
 #include "ipv6-queue-disc-item.h"
 #include "ipv6-packet-filter.h"
+#include "ns3/timer.h"
+#include "ns3/event-id.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -151,6 +155,7 @@ FqCoDelIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   return hash;
 }
 
+// ----------------------------------------------------------------- //
 
 NS_OBJECT_ENSURE_REGISTERED (SfqIpv6PacketFilter);
 
@@ -161,11 +166,11 @@ SfqIpv6PacketFilter::GetTypeId (void)
     .SetParent<Ipv6PacketFilter> ()
     .SetGroupName ("Internet")
     .AddConstructor<SfqIpv6PacketFilter> ()
-    .AddAttribute ("Perturbation Time",
+    .AddAttribute ("Perturbation_Time",
                    "The time duration after which salt used as an additional input to the hash function is changed",
                    UintegerValue (0),
-                   MakeUintegerAccessor (&SfqIpv6PacketFilter::m_perturb_time),
-                   MakeUintegerChecker<uint32_t> ())
+                   MakeTimeAccessor (&SfqIpv6PacketFilter::m_perturb_time),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -204,6 +209,7 @@ SfqIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
 
   Ipv6Header hdr = ipv6Item->GetHeader ();
   Ipv6Address src = hdr.GetSourceAddress ();
+  Ipv6Address dest = hdr.GetDestinationAddress ();
 
   Ptr<Packet> pkt = ipv6Item->GetPacket ();
 

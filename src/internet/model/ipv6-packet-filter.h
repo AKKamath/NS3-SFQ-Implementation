@@ -26,6 +26,10 @@
 
 #include "ns3/object.h"
 #include "ns3/packet-filter.h"
+#include "ns3/timer.h"
+#include "ns3/event-id.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -93,7 +97,7 @@ private:
   virtual void PerturbHash();
 
   uint32_t m_perturbation; //!< hash perturbation value
-  uint32_t m_perturb_time; //!< interval after which perturbation takes place
+  Time m_perturb_time;     //!< interval after which perturbation takes place
   EventId m_perturbEvent;  //!< Event used to change the value of perturbation
 };
 
