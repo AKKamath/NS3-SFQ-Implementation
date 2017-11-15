@@ -190,6 +190,8 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchSfq;
   tchSfq.SetRootQueueDisc ("ns3::SfqQueueDisc");
+  tchSfq.AddPacketFilter(handle,"ns3::SfqIpv4PacketFilter");
+  tchSfq.AddPacketFilter(handle,"ns3::SfqIpv6PacketFilter");
 
   NS_LOG_INFO ("Create channels");
   PointToPointHelper p2p;
