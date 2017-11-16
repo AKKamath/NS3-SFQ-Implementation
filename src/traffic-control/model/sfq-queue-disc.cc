@@ -101,16 +101,6 @@ TypeId SfqQueueDisc::GetTypeId (void)
     .SetParent<QueueDisc> ()
     .SetGroupName ("TrafficControl")
     .AddConstructor<SfqQueueDisc> ()
-    .AddAttribute ("Interval",
-                   "The algorithm interval for each SFQ queue",
-                   StringValue ("100ms"),
-                   MakeStringAccessor (&SfqQueueDisc::m_interval),
-                   MakeStringChecker ())
-    .AddAttribute ("Target",
-                   "The algorithm target queue delay for each SFQ queue",
-                   StringValue ("5ms"),
-                   MakeStringAccessor (&SfqQueueDisc::m_target),
-                   MakeStringChecker ())
     .AddAttribute ("PacketLimit",
                    "The hard limit on the real queue size, measured in packets",
                    UintegerValue (10 * 1024),
@@ -322,6 +312,7 @@ SfqQueueDisc::InitializeParams (void)
 
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
   m_queueDiscFactory.SetTypeId ("ns3::PfifoFastQueueDisc");
+  m_queueDiscFactory.Set ("Limit", UintegerValue (m_limit + 1));
 }
 
 uint32_t

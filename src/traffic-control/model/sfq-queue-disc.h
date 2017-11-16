@@ -140,8 +140,6 @@ private:
    */
   uint32_t SfqDrop (void);
 
-  std::string m_interval;    //!< Interval attribute
-  std::string m_target;      //!< Target attribute
   uint32_t m_limit;          //!< Maximum number of packets in the queue disc
   uint32_t m_quantum;        //!< Deficit assigned to flows at each round
   uint32_t m_flows;          //!< Number of flow queues
