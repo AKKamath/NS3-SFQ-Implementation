@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2016 NITK Surathkal
+ * Copyright (c) 2017 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -321,7 +321,7 @@ SfqQueueDisc::InitializeParams (void)
     }
 
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
-  m_queueDiscFactory.SetTypeId ("ns3::QueueDiscClass");
+  m_queueDiscFactory.SetTypeId ("ns3::PfifoFastQueueDisc");
 }
 
 uint32_t
