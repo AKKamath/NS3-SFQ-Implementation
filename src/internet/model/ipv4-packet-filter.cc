@@ -169,7 +169,7 @@ SfqIpv4PacketFilter::GetTypeId (void)
     .AddConstructor<SfqIpv4PacketFilter> ()
     .AddAttribute ("Perturbation_Time",
                    "The time duration after which salt used as an additional input to the hash function is changed",
-                   UintegerValue (0),
+                   UintegerValue (100),
                    MakeTimeAccessor (&SfqIpv4PacketFilter::m_perturb_time),
                    MakeTimeChecker ())
   ;
