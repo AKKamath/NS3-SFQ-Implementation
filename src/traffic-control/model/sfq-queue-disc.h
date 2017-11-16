@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2016 NITK Surathkal
+ * Copyright (c) 2017 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -37,7 +37,7 @@ namespace ns3 {
  * \brief A flow queue used by the Sfq queue disc
  */
 
-class sfqFlow : public QueueDiscClass {
+class SfqFlow : public QueueDiscClass {
 public:
   /**
    * \brief Get the type ID.
@@ -45,11 +45,11 @@ public:
    */
   static TypeId GetTypeId (void);
   /**
-   * \brief sfqFlow constructor
+   * \brief SfqFlow constructor
    */
-  sfqFlow ();
+  SfqFlow ();
 
-  virtual ~sfqFlow ();
+  virtual ~SfqFlow ();
 
   /**
    * \enum FlowStatus
@@ -116,14 +116,14 @@ public:
    /**
     * \brief Set the quantum value.
     *
-    * \param quantum The number of bytes each queue gets to dequeue on each round of the scheduling algorithm
+    * \param quantum The number of bytes each queue gets to dequeue on each round of the uling algorithm
     */
    void SetQuantum (uint32_t quantum);
 
    /**
     * \brief Get the quantum value.
     *
-    * \returns The number of bytes each queue gets to dequeue on each round of the scheduling algorithm
+    * \returns The number of bytes each queue gets to dequeue on each round of the uling algorithm
     */
    uint32_t GetQuantum (void) const;
 
@@ -149,7 +149,7 @@ private:
 
   uint32_t m_overlimitDroppedPackets; //!< Number of overlimit dropped packets
 
-  std::list<Ptr<sfqFlow> > m_flowList;    //!< The list of new flows
+  std::list<Ptr<SfqFlow> > m_flowList;    //!< The list of new flows
 
   std::map<uint32_t, uint32_t> m_flowsIndices;    //!< Map with the index of class for each flow
 

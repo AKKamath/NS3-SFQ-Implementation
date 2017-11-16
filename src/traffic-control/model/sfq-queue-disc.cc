@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2016 NITK Surathkal
+ * Copyright (c) 2017 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -24,7 +24,12 @@
 #include "ns3/log.h"
 #include "ns3/string.h"
 #include "sfq-queue-disc.h"
-
+#include "ns3/queue.h"
+#include "ns3/ipv4-packet-filter.h"
+#include "ns3/ipv6-packet-filter.h"
+//#include "fq-codel-queue-disc.h"
+//#include "codel-queue-disc.h"
+#include "ns3/net-device-queue-interface.h"
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SfqQueueDisc");
@@ -87,7 +92,7 @@ SfqFlow::GetStatus (void) const
   NS_LOG_FUNCTION (this);
   return m_status;
 }
-  
+
 NS_OBJECT_ENSURE_REGISTERED (SfqQueueDisc);
 
 TypeId SfqQueueDisc::GetTypeId (void)
@@ -156,7 +161,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   NS_LOG_FUNCTION (this << item);
   // ***add filters to the classify fucntion ***
   int32_t ret = Classify (item); //classify returns a hash function based on the packet filters
-  unint32_t h;
+  uint32_t h;
 
   if (ret == PacketFilter::PF_NO_MATCH)
     {
@@ -167,8 +172,6 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     {
       h = ret % m_flows;
     }
-
-  uint32_t h = ret % m_flows;
 
   Ptr<SfqFlow> flow;
   if (m_flowsIndices.find (h) == m_flowsIndices.end ())
@@ -193,7 +196,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     flow->SetAllot (m_quantum);
     m_flowList.push_front (flow);
   }
-  
+
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
@@ -257,7 +260,7 @@ SfqQueueDisc::DoDequeue (void)
         }
     } while (item == 0);
 
-  flow->IncreaseAllot (-item->GetPacketSize ());
+  flow->IncreaseAllot (-item->GetSize ());
 
   return item;
 }
@@ -318,12 +321,7 @@ SfqQueueDisc::InitializeParams (void)
     }
 
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
-
-  m_queueDiscFactory.SetTypeId ("ns3::QueueDisc");
-  m_queueDiscFactory.Set ("Mode", EnumValue (Queue::QUEUE_MODE_PACKETS));
-  m_queueDiscFactory.Set ("MaxPackets", UintegerValue (m_limit + 1));
-  m_queueDiscFactory.Set ("Interval", StringValue (m_interval));
-  m_queueDiscFactory.Set ("Target", StringValue (m_target));
+  m_queueDiscFactory.SetTypeId ("ns3::PfifoFastQueueDisc");
 }
 
 uint32_t
@@ -349,15 +347,16 @@ SfqQueueDisc::SfqDrop (void)
   /* Our goal is to drop half of this fat flow backlog */
   uint32_t len = 0, count = 0, threshold = maxBacklog >> 1;
   qd = GetQueueDiscClass (index)->GetQueueDisc ();
-  Ptr<QueueItem> item;
+  Ptr<QueueDiscItem> item;
 
   do
     {
       item = qd->GetInternalQueue (0)->Remove ();
-      len += item->GetPacketSize ();
+    //  DropAfterDequeue (item, OVERLIMIT_DROP);
+      len += item->GetSize ();
     } while (++count < m_dropBatchSize && len < threshold);
 
-  m_overlimitDroppedPackets += count;
+  //m_overlimitDroppedPackets += count;
 
   return index;
 }

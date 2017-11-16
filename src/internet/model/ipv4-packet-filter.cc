@@ -28,6 +28,10 @@
 #include "ns3/udp-header.h"
 #include "ipv4-queue-disc-item.h"
 #include "ipv4-packet-filter.h"
+#include "ns3/timer.h"
+#include "ns3/event-id.h"
+#include "ns3/random-variable-stream.h"
+#include "ns3/simulator.h"
 
 namespace ns3 {
 
@@ -163,11 +167,11 @@ SfqIpv4PacketFilter::GetTypeId (void)
     .SetParent<Ipv4PacketFilter> ()
     .SetGroupName ("Internet")
     .AddConstructor<SfqIpv4PacketFilter> ()
-    .AddAttribute ("Perturbation Time",
+    .AddAttribute ("Perturbation_Time",
                    "The time duration after which salt used as an additional input to the hash function is changed",
                    UintegerValue (0),
-                   MakeUintegerAccessor (&SfqIpv4PacketFilter::m_perturb_time),
-                   MakeUintegerChecker<uint32_t> ())
+                   MakeTimeAccessor (&SfqIpv4PacketFilter::m_perturb_time),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -204,6 +208,7 @@ SfqIpv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
     return PacketFilter::PF_NO_MATCH;
   }
 
+  Ipv4Header hdr = ipv4Item->GetHeader ();
   Ipv4Address src = hdr.GetSource ();
   Ipv4Address dest = hdr.GetDestination ();
 

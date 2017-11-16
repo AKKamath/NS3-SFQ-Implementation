@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2016 NITK Surathkal
+ * Copyright (c) 2017 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -40,6 +40,9 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/traffic-control-module.h"
+#include "ns3/sfq-queue-disc.h"
+#include "ns3/ipv4-packet-filter.h"
+#include "ns3/ipv6-packet-filter.h"
 
 using namespace ns3;
 
@@ -70,26 +73,6 @@ Ipv4InterfaceContainer i3i5;
 
 std::stringstream filePlotQueueDisc;
 std::stringstream filePlotQueueDiscAvg;
-
-void
-CheckQueueDiscSize (Ptr<QueueDisc> queue)
-{
-  uint32_t qSize = StaticCast<SfqQueueDisc> (queue)->GetQueueSize ();
-
-  avgQueueDiscSize += qSize;
-  checkTimes++;
-
-  // check queue disc size every 1/100 of a second
-  Simulator::Schedule (Seconds (0.01), &CheckQueueDiscSize, queue);
-
-  std::ofstream fPlotQueueDisc (filePlotQueueDisc.str ().c_str (), std::ios::out | std::ios::app);
-  fPlotQueueDisc << Simulator::Now ().GetSeconds () << " " << qSize << std::endl;
-  fPlotQueueDisc.close ();
-
-  std::ofstream fPlotQueueDiscAvg (filePlotQueueDiscAvg.str ().c_str (), std::ios::out | std::ios::app);
-  fPlotQueueDiscAvg << Simulator::Now ().GetSeconds () << " " << avgQueueDiscSize / checkTimes << std::endl;
-  fPlotQueueDiscAvg.close ();
-}
 
 void
 BuildAppsTest ()
@@ -203,10 +186,12 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchPfifo;
   uint16_t handle = tchPfifo.SetRootQueueDisc ("ns3::PfifoFastQueueDisc");
-  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (10 * 1024));
+  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (10000));
 
   TrafficControlHelper tchSfq;
   tchSfq.SetRootQueueDisc ("ns3::SfqQueueDisc");
+  tchSfq.AddPacketFilter(handle,"ns3::SfqIpv4PacketFilter");
+  tchSfq.AddPacketFilter(handle,"ns3::SfqIpv6PacketFilter");
 
   NS_LOG_INFO ("Create channels");
   PointToPointHelper p2p;
@@ -296,7 +281,6 @@ main (int argc, char *argv[])
       remove (filePlotQueueDisc.str ().c_str ());
       remove (filePlotQueueDiscAvg.str ().c_str ());
       Ptr<QueueDisc> queue = queueDiscs.Get (0);
-      Simulator::ScheduleNow (&CheckQueueDiscSize, queue);
     }
 
   Simulator::Stop (Seconds (sink_stop_time));
@@ -304,11 +288,11 @@ main (int argc, char *argv[])
 
   QueueDisc::Stats st = queueDiscs.Get (0)->GetStats ();
 
-  if (st.GetNDroppedPackets (SfqQueueDisc::FORCED_DROP) != 0)
+  /*if (st.GetNDroppedPackets (SfqQueueDisc::FORCED_DROP) != 0)
     {
       std::cout << "There should be no drops due to queue full." << std::endl;
       exit (1);
-    }
+    }*/
 
   if (flowMonitor)
     {
@@ -321,10 +305,10 @@ main (int argc, char *argv[])
   if (printSfqStats)
     {
       std::cout << "*** SFQ stats from Node 2 queue ***" << std::endl;
-      std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNFORCED_DROP)
-                << " drops due to prob mark" << std::endl;
-      std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::FORCED_DROP)
-                << " drops due to queue limits" << std::endl;
+      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNFORCED_DROP)
+        //        << " drops due to prob mark" << std::endl;
+      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::FORCED_DROP)
+        //        << " drops due to queue limits" << std::endl;
     }
 
   Simulator::Destroy ();
