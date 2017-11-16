@@ -310,9 +310,6 @@ SfqQueueDisc::InitializeParams (void)
 {
   NS_LOG_FUNCTION (this);
 
-    //Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (10));
-
-
   // we are at initialization time. If the user has not set a quantum value,
   // set the quantum to the MTU of the device
   if (!m_quantum)
@@ -324,12 +321,7 @@ SfqQueueDisc::InitializeParams (void)
     }
 
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
-
-  m_queueDiscFactory.SetTypeId ("ns3::QueueDisc");
-  //m_queueDiscFactory.Set ("Mode", EnumValue (Queue::QUEUE_MODE_PACKETS));
-  m_queueDiscFactory.Set ("MaxPackets", UintegerValue (m_limit + 1));
-  m_queueDiscFactory.Set ("Interval", StringValue (m_interval));
-  m_queueDiscFactory.Set ("Target", StringValue (m_target));
+  m_queueDiscFactory.SetTypeId ("ns3::QueueDiscClass");
 }
 
 uint32_t

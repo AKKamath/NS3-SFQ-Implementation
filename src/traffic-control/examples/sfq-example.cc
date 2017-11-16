@@ -186,7 +186,7 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchPfifo;
   uint16_t handle = tchPfifo.SetRootQueueDisc ("ns3::PfifoFastQueueDisc");
-  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (10 * 1024));
+  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (10000));
 
   TrafficControlHelper tchSfq;
   tchSfq.SetRootQueueDisc ("ns3::SfqQueueDisc");
