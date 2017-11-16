@@ -112,7 +112,7 @@ int main (int argc, char *argv[])
   CommandLine cmd;
   cmd.AddValue ("bandwidth", "Bottleneck bandwidth", bandwidth);
   cmd.AddValue ("delay", "Bottleneck delay", delay);
-  cmd.AddValue ("queueDiscType", "Bottleneck queue disc type in {PfifoFast, ARED, CoDel, FqCoDel, PIE}", queueDiscType);
+  cmd.AddValue ("queueDiscType", "Bottleneck queue disc type in {PfifoFast, ARED, CoDel, FqCoDel, PIE, SFQ}", queueDiscType);
   cmd.AddValue ("queueDiscSize", "Bottleneck queue disc size in packets", queueDiscSize);
   cmd.AddValue ("netdevicesQueueSize", "Bottleneck netdevices queue size in packets", netdevicesQueueSize);
   cmd.AddValue ("bql", "Enable byte queue limits on bottleneck netdevices", bql);
@@ -179,6 +179,13 @@ int main (int argc, char *argv[])
       tchBottleneck.SetRootQueueDisc ("ns3::PieQueueDisc");
       Config::SetDefault ("ns3::PieQueueDisc::Mode", EnumValue (PieQueueDisc::QUEUE_DISC_MODE_PACKETS));
       Config::SetDefault ("ns3::PieQueueDisc::QueueLimit", UintegerValue (queueDiscSize));
+    }
+  else if (queueDiscType.compare ("SFQ") == 0)
+    {
+      uint32_t handle = tchBottleneck.SetRootQueueDisc ("ns3::SfqQueueDisc");
+      Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (queueDiscSize));
+      tchBottleneck.AddPacketFilter (handle, "ns3::SfqIpv4PacketFilter");
+      tchBottleneck.AddPacketFilter (handle, "ns3::SfqIpv6PacketFilter");
     }
   else
     {
