@@ -174,8 +174,6 @@ main (int argc, char *argv[])
 
   // SFQ params
   NS_LOG_INFO ("Set SFQ params");
-  Config::SetDefault ("ns3::SfqQueueDisc::Interval", StringValue ("100ms"));
-  Config::SetDefault ("ns3::SfqQueueDisc::Target", StringValue ("5ms"));
   Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (10 * 1024));
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (1024));
   Config::SetDefault ("ns3::SfqQueueDisc::DropBatchSize", UintegerValue (64));
