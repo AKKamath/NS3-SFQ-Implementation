@@ -69,7 +69,7 @@ def BuildAppsTest ():
   # SINK is in the right side
   port = 50000
   sinkLocalAddress=ns.network.Address(ns.network.InetSocketAddress (ns.network.Ipv4Address.GetAny (), port))
-  
+
   sinkHelper=ns.applications.PacketSinkHelper ("ns3::TcpSocketFactory", sinkLocalAddress)
   sinkApp = ns.network.ApplicationContainer()
   sinkHelper.Install (n3n4.Get (1))
@@ -104,7 +104,7 @@ def BuildAppsTest ():
   clientApps1.Start (ns.core.Seconds (client_start_time))
   clientApps1.Stop (ns.core.Seconds (client_stop_time))
 
-  clientApps1=ns.network.ApplicationContainer () 
+  clientApps1=ns.network.ApplicationContainer ()
   clientHelper2.SetAttribute ("Remote", remoteAddress)
   clientApps2.Add (clientHelper1.Install (n1n2.Get (0)))
   clientApps2.Start (ns.core.Seconds (client_start_time))
@@ -188,8 +188,8 @@ def main(argv):
   devn0n2=ns.network.NetDeviceContainer()
   devn1n2=ns.network.NetDeviceContainer()
   devn2n3=ns.network.NetDeviceContainer()
-  devn3n4ns.network.NetDeviceContainer()
-  devn3n5ns.network.NetDeviceContainer()
+  devn3n4=ns.network.NetDeviceContainer()
+  devn3n5=ns.network.NetDeviceContainer()
 
   queueDiscs = ns.traffic_control.QueueDiscContainer()
   p2p.SetQueue ("ns3::DropTailQueue")
@@ -230,7 +230,7 @@ def main(argv):
 
   ipv4.SetBase(ns.network.Ipv4Address("10.1.1.0"),ns.network.Ipv4Mask("255.255.255.0"))
 
-  i0i2 = ipv4.Assign(devn0n2)      
+  i0i2 = ipv4.Assign(devn0n2)
 
 
   ipv4.SetBase(ns.network.Ipv4Address("10.1.2.0"),ns.network.Ipv4Mask("255.255.255.0"))
@@ -254,7 +254,7 @@ def main(argv):
   if (writePcap):
     ptp=ns.point_to_point.PointToPointHelper()
     print pathOut+"/sfq"
-    ptp.EnablePcapAll(c_str())    
+    ptp.EnablePcapAll(c_str())
 
   if (flowMonitor):
     flowmonHelper = ns.flow_monitor.FlowMonitorHelper
@@ -277,4 +277,3 @@ def main(argv):
 
 if __name__ == '__main__':
     main(sys.argv)
-
