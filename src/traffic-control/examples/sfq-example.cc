@@ -176,7 +176,6 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Set SFQ params");
   Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (10 * 1024));
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (1024));
-  Config::SetDefault ("ns3::SfqQueueDisc::DropBatchSize", UintegerValue (64));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;

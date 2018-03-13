@@ -109,18 +109,12 @@ TypeId SfqQueueDisc::GetTypeId (void)
                    UintegerValue (1024),
                    MakeUintegerAccessor (&SfqQueueDisc::m_flows),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("DropBatchSize",
-                   "The maximum number of packets dropped from the fat flow",
-                   UintegerValue (64),
-                   MakeUintegerAccessor (&SfqQueueDisc::m_dropBatchSize),
-                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
 
 SfqQueueDisc::SfqQueueDisc ()
-  : m_quantum (0),
-    m_overlimitDroppedPackets (0)
+  : m_quantum (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -156,7 +150,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       NS_LOG_ERROR ("No filter has been able to classify this packet, drop it.");
       h = m_flows; // place all unfiltered packets into a seperate flow queue
     }
-    else
+  else
     {
       h = ret % m_flows;
     }
@@ -179,20 +173,15 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
 
   if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
-  {
-    flow->SetStatus (SfqFlow::SFQ_IN_USE);
-    flow->SetAllot (m_quantum);
-    m_flowList.push_back (flow);
-  }
+    {
+      flow->SetStatus (SfqFlow::SFQ_IN_USE);
+      flow->SetAllot (m_quantum);
+      m_flowList.push_back (flow);
+    }
 
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
-
-  if (GetNPackets () > m_limit)
-    {
-      SfqDrop ();
-    }
 
   return true;
 }
@@ -237,7 +226,7 @@ SfqQueueDisc::DoDequeue (void)
           NS_LOG_DEBUG ("Could not get a packet from the selected flow queue");
           if (!m_flowList.empty ())
             {
-              flow->SetStatus(SfqFlow::SFQ_EMPTY_SLOT);
+              flow->SetStatus (SfqFlow::SFQ_EMPTY_SLOT);
               m_flowList.pop_front ();
             }
         }
@@ -309,44 +298,7 @@ SfqQueueDisc::InitializeParams (void)
 
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
   m_queueDiscFactory.SetTypeId ("ns3::PfifoFastQueueDisc");
-  m_queueDiscFactory.Set ("Limit", UintegerValue (m_limit + 1));
-}
-
-uint32_t
-SfqQueueDisc::SfqDrop (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  uint32_t maxBacklog = 0, index = 0;
-  Ptr<QueueDisc> qd;
-
-  /* Queue is full! Find the fat flow and drop packet(s) from it */
-  for (uint32_t i = 0; i < GetNQueueDiscClasses (); i++)
-    {
-      qd = GetQueueDiscClass (i)->GetQueueDisc ();
-      uint32_t bytes = qd->GetNBytes ();
-      if (bytes > maxBacklog)
-        {
-          maxBacklog = bytes;
-          index = i;
-        }
-    }
-
-  /* Our goal is to drop half of this fat flow backlog */
-  uint32_t len = 0, count = 0, threshold = maxBacklog >> 1;
-  qd = GetQueueDiscClass (index)->GetQueueDisc ();
-  Ptr<QueueDiscItem> item;
-
-  do
-    {
-      item = qd->GetInternalQueue (0)->Remove ();
-    //  DropAfterDequeue (item, OVERLIMIT_DROP);
-      len += item->GetSize ();
-    } while (++count < m_dropBatchSize && len < threshold);
-
-  //m_overlimitDroppedPackets += count;
-
-  return index;
+  m_queueDiscFactory.Set ("Limit", UintegerValue (m_limit));
 }
 
 } // namespace ns3

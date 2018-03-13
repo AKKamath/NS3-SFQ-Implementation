@@ -134,18 +134,9 @@ private:
   virtual bool CheckConfig (void);
   virtual void InitializeParams (void);
 
-  /**
-   * \brief Drop a packet from the head of the queue with the largest current byte count
-   * \return the index of the queue with the largest current byte count
-   */
-  uint32_t SfqDrop (void);
-
   uint32_t m_limit;          //!< Maximum number of packets in the queue disc
   uint32_t m_quantum;        //!< Deficit assigned to flows at each round
   uint32_t m_flows;          //!< Number of flow queues
-  uint32_t m_dropBatchSize;  //!< Max number of packets dropped from the fat flow
-
-  uint32_t m_overlimitDroppedPackets; //!< Number of overlimit dropped packets
 
   std::list<Ptr<SfqFlow> > m_flowList;    //!< The list of new flows
 
