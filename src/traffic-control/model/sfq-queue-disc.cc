@@ -100,7 +100,7 @@ TypeId SfqQueueDisc::GetTypeId (void)
     .SetGroupName ("TrafficControl")
     .AddConstructor<SfqQueueDisc> ()
     .AddAttribute ("PacketLimit",
-                   "The hard limit on the real queue size, measured in packets",
+                   "The limit for each FIFO queue of the SFQ, measured in packets",
                    UintegerValue (10 * 1024),
                    MakeUintegerAccessor (&SfqQueueDisc::m_limit),
                    MakeUintegerChecker<uint32_t> ())
