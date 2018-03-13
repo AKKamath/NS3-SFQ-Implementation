@@ -122,7 +122,7 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<SfqQueueDisc> queue,
 void
 SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
-  /*Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4));
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
   Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -135,7 +135,7 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
   Ptr<QueueDiscItem> item;
   item = queueDisc->Dequeue ();
   NS_TEST_EXPECT_MSG_EQ ((item == 0), true, "Verifying Dequeue of empty queue returns 0");
- 
+
   Ipv4Header hdr;
   hdr.SetPayloadSize (100);
   hdr.SetSource (Ipv4Address ("10.10.1.1"));
@@ -149,20 +149,23 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 3, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
 
-  // Add two packets from the second flow
+  // Add four packets to the second flow
   hdr.SetDestination (Ipv4Address ("10.10.1.7"));
-  // Add the first packet
   AddPacket (queueDisc, hdr);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 4, "unexpected number of packets in the queue disc");
+  AddPacket (queueDisc, hdr);
+  AddPacket (queueDisc, hdr);
+  AddPacket (queueDisc, hdr);
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 7, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the flow queue");
-  // Add the second packet that causes two packets to be dropped from the fat flow (max backlog = 300, threshold = 150)
-  AddPacket (queueDisc, hdr);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 3, "unexpected number of packets in the queue disc");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the flow queue");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 4, "unexpected number of packets in the flow queue");
 
-  Simulator::Destroy ();*/
+  // Add a fifth packet, which gets dropped
+  AddPacket (queueDisc, hdr);
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 7, "unexpected number of packets in the queue disc");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 4, "unexpected number of packets in the flow queue");
+
+  Simulator::Destroy ();
 }
 
 /**
