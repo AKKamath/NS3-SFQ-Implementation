@@ -182,7 +182,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   {
     flow->SetStatus (SfqFlow::SFQ_IN_USE);
     flow->SetAllot (m_quantum);
-    m_flowList.push_front (flow);
+    m_flowList.push_back (flow);
   }
 
   flow->GetQueueDisc ()->Enqueue (item);
@@ -204,7 +204,6 @@ SfqQueueDisc::DoDequeue (void)
 
   Ptr<SfqFlow> flow;
   Ptr<QueueDiscItem> item;
-
   do
     {
       bool found = false;
