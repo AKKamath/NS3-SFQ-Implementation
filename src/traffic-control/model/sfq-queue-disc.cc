@@ -27,8 +27,6 @@
 #include "ns3/queue.h"
 #include "ns3/ipv4-packet-filter.h"
 #include "ns3/ipv6-packet-filter.h"
-//#include "fq-codel-queue-disc.h"
-//#include "codel-queue-disc.h"
 #include "ns3/net-device-queue-interface.h"
 namespace ns3 {
 
