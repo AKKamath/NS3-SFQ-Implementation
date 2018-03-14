@@ -209,8 +209,8 @@ int main (int argc, char *argv[])
     {
       SfqQueueDisc::Stats st = StaticCast<SfqQueueDisc> (queueDiscs.Get (0))->GetStats ();
       std::cout << "*** Sfq stats from queue ***" << std::endl;
-      std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNCLASSIFIED_DROP)
-                << " drops because packet could not be classified by any filter" << std::endl;
+      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNCLASSIFIED_DROP)
+      //          << " drops because packet could not be classified by any filter" << std::endl;
       std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::OVERLIMIT_DROP)
                 << " drops because of byte limit overflow" << std::endl;
             
