@@ -127,6 +127,9 @@ public:
     */
    uint32_t GetQuantum (void) const;
 
+  // Reasons for dropping packets
+  static constexpr const char* OVERLIMIT_DROP = "Overlimit drop";        //!< Overlimit dropped packets
+
 private:
   virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
   virtual Ptr<QueueDiscItem> DoDequeue (void);

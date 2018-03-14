@@ -147,7 +147,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 
   if (ret == PacketFilter::PF_NO_MATCH)
     {
-      NS_LOG_ERROR ("No filter has been able to classify this packet, drop it.");
+      NS_LOG_ERROR ("No filter has been able to classify this packet, place it in seperate flow.");
       h = m_flows; // place all unfiltered packets into a seperate flow queue
     }
   else
@@ -178,7 +178,11 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow->SetAllot (m_quantum);
       m_flowList.push_back (flow);
     }
-
+  if (flow->GetQueueDisc ()->GetNPackets () == m_limit)
+    {
+      DropBeforeEnqueue (item, OVERLIMIT_DROP);
+      return false;
+    }
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
