@@ -92,7 +92,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocketBase::WindowScaling", BooleanValue (true));
 
   NS_LOG_INFO ("Set Sfq params");
-  Config::SetDefault ("ns3::SfqQueueDisc::ByteLimit", UintegerValue (100 * 1024));
+  Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (100 * 1024));
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (1024));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
