@@ -103,7 +103,7 @@ private:
   virtual void PerturbHash();
 
   uint32_t m_perturbation; //!< hash perturbation value
-  Time     m_perturb_time; //!< interval after which perturbation takes place
+  uint32_t m_perturb_time; //!< interval after which perturbation takes place
   EventId m_perturbEvent;  //!< Event used to change the value of perturbation
 };
 

@@ -167,11 +167,11 @@ SfqIpv4PacketFilter::GetTypeId (void)
     .SetParent<Ipv4PacketFilter> ()
     .SetGroupName ("Internet")
     .AddConstructor<SfqIpv4PacketFilter> ()
-    .AddAttribute ("Perturbation_Time",
+    .AddAttribute ("PerturbationTime",
                    "The time duration after which salt used as an additional input to the hash function is changed",
                    UintegerValue (100),
-                   MakeTimeAccessor (&SfqIpv4PacketFilter::m_perturb_time),
-                   MakeTimeChecker ())
+                   MakeUintegerAccessor (&SfqIpv4PacketFilter::m_perturb_time),
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
@@ -180,7 +180,7 @@ SfqIpv4PacketFilter::SfqIpv4PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
   if(m_perturb_time != 0)
-    m_perturbEvent = Simulator::Schedule (m_perturb_time, &SfqIpv4PacketFilter::PerturbHash, this);
+    m_perturbEvent = Simulator::Schedule (Time(m_perturb_time), &SfqIpv4PacketFilter::PerturbHash, this);
 }
 
 SfqIpv4PacketFilter::~SfqIpv4PacketFilter ()
@@ -193,7 +193,8 @@ SfqIpv4PacketFilter::PerturbHash()
 {
   Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
   m_perturbation = x->GetInteger();
-  m_perturbEvent = Simulator::Schedule (m_perturb_time, &SfqIpv4PacketFilter::PerturbHash, this);
+  if(m_perturb_time != 0)
+    m_perturbEvent = Simulator::Schedule (Time(m_perturb_time), &SfqIpv4PacketFilter::PerturbHash, this);
 }
 
 int32_t
