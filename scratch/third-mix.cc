@@ -95,7 +95,7 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::TcpSocketBase::WindowScaling", BooleanValue (true));
 
   NS_LOG_INFO ("Set Sfq params");
-  Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (100 * 1024));
+  Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (102400));
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (1024));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
@@ -260,8 +260,6 @@ int main (int argc, char *argv[])
     {
       SfqQueueDisc::Stats st = StaticCast<SfqQueueDisc> (queueDiscs.Get (0))->GetStats ();
       std::cout << "*** Sfq stats from bottleneck queue ***" << std::endl;
-      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNCLASSIFIED_DROP)
-      //          << " drops because packet could not be classified by any filter" << std::endl;
       std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::OVERLIMIT_DROP)
                 << " drops because of byte limit overflow" << std::endl;
     }
