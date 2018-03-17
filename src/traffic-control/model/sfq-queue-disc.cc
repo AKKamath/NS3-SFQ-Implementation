@@ -141,7 +141,6 @@ bool
 SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
 {
   NS_LOG_FUNCTION (this << item);
-  // ***add filters to the classify fucntion ***
   int32_t ret = Classify (item); //classify returns a hash function based on the packet filters
   uint32_t h;
 
@@ -171,7 +170,9 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     {
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
-  if (GetNPackets () >= m_limit)
+
+  if (GetNPackets () >= m_limit
+    || (m_limit - GetNPackets () < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare))
     {
       DropBeforeEnqueue (item, OVERLIMIT_DROP);
       return false;
@@ -304,6 +305,7 @@ SfqQueueDisc::InitializeParams (void)
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
   m_queueDiscFactory.SetTypeId ("ns3::PfifoFastQueueDisc");
   m_queueDiscFactory.Set ("Limit", UintegerValue (m_limit));
+  m_fairshare = m_limit / m_flows;
 }
 
 } // namespace ns3

@@ -63,7 +63,7 @@ void
 SfqQueueDiscNoSuitableFilter::DoRun (void)
 {
   // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4), "Flows", UintegerValue(2));
   Ptr<SfqIpv4PacketFilter> filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (filter);
 
@@ -122,7 +122,7 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<SfqQueueDisc> queue,
 void
 SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (8), "Flows", UintegerValue(4));
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
   Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -142,28 +142,32 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
   hdr.SetDestination (Ipv4Address ("10.10.1.2"));
   hdr.SetProtocol (7);
 
-  // Add three packets from the first flow
+  // Add two packets from the first flow
   AddPacket (queueDisc, hdr);
   AddPacket (queueDisc, hdr);
-  AddPacket (queueDisc, hdr);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 3, "unexpected number of packets in the queue disc");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 2, "unexpected number of packets in the queue disc");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the flow queue");
 
-  // Add four packets to the second flow
+  // Add three packets to the second flow
+  hdr.SetSource (Ipv4Address ("10.10.1.2"));
   hdr.SetDestination (Ipv4Address ("10.10.1.7"));
   AddPacket (queueDisc, hdr);
   AddPacket (queueDisc, hdr);
   AddPacket (queueDisc, hdr);
-  AddPacket (queueDisc, hdr);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 7, "unexpected number of packets in the queue disc");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 4, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 5, "unexpected number of packets in the queue disc");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
 
-  // Add a fifth packet, which gets dropped
+  // Add a fourth packet to second flow, which gets dropped
+  // This is dropped because the second flow is exceeding its
+  // fair share of two packets (Fairshare = PacketLimit / Flows)
+  // and, since the remaining number of packet slots is less
+  // than the total number of possible flows, the second flow
+  // is not allowed to have any more packets
   AddPacket (queueDisc, hdr);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 7, "unexpected number of packets in the queue disc");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 4, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 5, "unexpected number of packets in the queue disc");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the flow queue");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 3, "unexpected number of packets in the flow queue");
 
   Simulator::Destroy ();
 }
@@ -204,7 +208,7 @@ SfqQueueDiscTCPFlowsSeparation::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header i
 void
 SfqQueueDiscTCPFlowsSeparation::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (10));
+  Ptr<SfqQueueDisc> queueDisc = CreateObject<SfqQueueDisc> ();
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
   Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -294,7 +298,7 @@ SfqQueueDiscUDPFlowsSeparation::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header i
 void
 SfqQueueDiscUDPFlowsSeparation::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (10));
+  Ptr<SfqQueueDisc> queueDisc = CreateObject<SfqQueueDisc> ();
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
   Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
