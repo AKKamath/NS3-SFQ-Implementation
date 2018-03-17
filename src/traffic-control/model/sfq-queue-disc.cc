@@ -100,7 +100,7 @@ TypeId SfqQueueDisc::GetTypeId (void)
     .SetGroupName ("TrafficControl")
     .AddConstructor<SfqQueueDisc> ()
     .AddAttribute ("PacketLimit",
-                   "The limit for each FIFO queue of the SFQ, measured in packets",
+                   "The hard limit on the real queue size, measured in packets",
                    UintegerValue (10 * 1024),
                    MakeUintegerAccessor (&SfqQueueDisc::m_limit),
                    MakeUintegerChecker<uint32_t> ())
@@ -171,6 +171,11 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     {
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
+  if (GetNPackets () >= m_limit)
+    {
+      DropBeforeEnqueue (item, OVERLIMIT_DROP);
+      return false;
+    }
 
   if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
     {
@@ -178,11 +183,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow->SetAllot (m_quantum);
       m_flowList.push_back (flow);
     }
-  if (flow->GetQueueDisc ()->GetNPackets () == m_limit)
-    {
-      DropBeforeEnqueue (item, OVERLIMIT_DROP);
-      return false;
-    }
+  
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
