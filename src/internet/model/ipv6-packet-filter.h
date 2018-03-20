@@ -80,7 +80,13 @@ private:
   uint32_t m_perturbation; //!< hash perturbation value
 };
 
-
+/**
+ * \ingroup internet
+ *
+ * SfqIpv6PacketFilter is the filter to be added to the SFQ
+ * queue disc to simulate the behavior of the sfq Linux queue disc.
+ *
+ */
 class SfqIpv6PacketFilter : public Ipv6PacketFilter {
 public:
   /**
@@ -97,8 +103,31 @@ private:
   virtual void PerturbHash();
 
   uint32_t m_perturbation; //!< hash perturbation value
-  uint32_t m_perturb_time; //!< interval after which perturbation takes place
+  uint32_t m_perturbTime; //!< interval after which perturbation takes place
   EventId m_perturbEvent;  //!< Event used to change the value of perturbation
+};
+
+/**
+ * \ingroup internet
+ *
+ * SfqNs2Ipv6PacketFilter is the filter to be added to the SFQ
+ * queue disc to simulate the behavior of the sfq ns-2 queue disc.
+ *
+ */
+class SfqNs2Ipv6PacketFilter : public Ipv6PacketFilter {
+public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
+  static TypeId GetTypeId (void);
+
+  SfqNs2Ipv6PacketFilter ();
+  virtual ~SfqNs2Ipv6PacketFilter ();
+
+private:
+  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+
 };
 
 } // namespace ns3

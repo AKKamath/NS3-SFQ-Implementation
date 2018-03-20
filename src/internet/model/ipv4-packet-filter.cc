@@ -170,7 +170,7 @@ SfqIpv4PacketFilter::GetTypeId (void)
     .AddAttribute ("PerturbationTime",
                    "The time duration after which salt used as an additional input to the hash function is changed",
                    UintegerValue (100),
-                   MakeUintegerAccessor (&SfqIpv4PacketFilter::m_perturb_time),
+                   MakeUintegerAccessor (&SfqIpv4PacketFilter::m_perturbTime),
                    MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
@@ -179,8 +179,10 @@ SfqIpv4PacketFilter::GetTypeId (void)
 SfqIpv4PacketFilter::SfqIpv4PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
-  if(m_perturb_time != 0)
-    m_perturbEvent = Simulator::Schedule (Time(m_perturb_time), &SfqIpv4PacketFilter::PerturbHash, this);
+  if(m_perturbTime != 0)
+    {
+      m_perturbEvent = Simulator::Schedule (Time(m_perturbTime), &SfqIpv4PacketFilter::PerturbHash, this);
+    }
 }
 
 SfqIpv4PacketFilter::~SfqIpv4PacketFilter ()
@@ -191,10 +193,12 @@ SfqIpv4PacketFilter::~SfqIpv4PacketFilter ()
 void
 SfqIpv4PacketFilter::PerturbHash()
 {
-  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
-  m_perturbation = x->GetInteger();
-  if(m_perturb_time != 0)
-    m_perturbEvent = Simulator::Schedule (Time(m_perturb_time), &SfqIpv4PacketFilter::PerturbHash, this);
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+  m_perturbation = rand->GetInteger();
+  if(m_perturbTime != 0)
+    {
+      m_perturbEvent = Simulator::Schedule (Time(m_perturbTime), &SfqIpv4PacketFilter::PerturbHash, this);
+    }
 }
 
 int32_t
@@ -204,10 +208,10 @@ SfqIpv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
   Ptr<Ipv4QueueDiscItem> ipv4Item = DynamicCast<Ipv4QueueDiscItem> (item);
 
   if(!ipv4Item)
-  {
-    NS_LOG_DEBUG("No match");
-    return PacketFilter::PF_NO_MATCH;
-  }
+    {
+      NS_LOG_DEBUG("No match");
+      return PacketFilter::PF_NO_MATCH;
+    }
 
   Ipv4Header hdr = ipv4Item->GetHeader ();
   Ipv4Address src = hdr.GetSource ();
@@ -227,6 +231,57 @@ SfqIpv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
   /* Linux calculates the jhash2 (jenkins hash), we calculate the murmur3 */
   uint32_t hash = Hash32 ((char*) buf, 12);
 
+  NS_LOG_DEBUG ("Found Ipv4 packet; hash value " << hash);
+
+  return hash;
+}
+
+// ------------------------------------------------------------------------- //
+
+NS_OBJECT_ENSURE_REGISTERED (SfqNs2Ipv4PacketFilter);
+
+TypeId
+SfqNs2Ipv4PacketFilter::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::SfqNs2Ipv4PacketFilter")
+    .SetParent<Ipv4PacketFilter> ()
+    .SetGroupName ("Internet")
+    .AddConstructor<SfqNs2Ipv4PacketFilter> ()
+  ;
+  return tid;
+}
+
+SfqNs2Ipv4PacketFilter::SfqNs2Ipv4PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+SfqNs2Ipv4PacketFilter::~SfqNs2Ipv4PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+int32_t
+SfqNs2Ipv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
+{
+  NS_LOG_FUNCTION (this << item);
+  Ptr<Ipv4QueueDiscItem> ipv4Item = DynamicCast<Ipv4QueueDiscItem> (item);
+
+  if(!ipv4Item)
+    {
+      NS_LOG_DEBUG("No match");
+      return PacketFilter::PF_NO_MATCH;
+    }
+
+  Ipv4Header hdr = ipv4Item->GetHeader ();
+  Ipv4Address src = hdr.GetSource ();
+  Ipv4Address dest = hdr.GetDestination ();
+
+  int32_t i = src.Get();
+  int32_t j = dest.Get();
+  int32_t k = i + j;
+
+  int32_t hash = (k + (k >> 8) + ~(k >> 4)) % ((2 << 19) - 1); // modulo a large prime
   NS_LOG_DEBUG ("Found Ipv4 packet; hash value " << hash);
 
   return hash;

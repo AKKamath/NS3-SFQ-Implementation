@@ -169,7 +169,7 @@ SfqIpv6PacketFilter::GetTypeId (void)
     .AddAttribute ("PerturbationTime",
                    "The time duration after which salt used as an additional input to the hash function is changed",
                    UintegerValue (100),
-                   MakeUintegerAccessor (&SfqIpv6PacketFilter::m_perturb_time),
+                   MakeUintegerAccessor (&SfqIpv6PacketFilter::m_perturbTime),
                    MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
@@ -178,8 +178,8 @@ SfqIpv6PacketFilter::GetTypeId (void)
 SfqIpv6PacketFilter::SfqIpv6PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
-  if(m_perturb_time != 0)
-    m_perturbEvent = Simulator::Schedule (Time(m_perturb_time), &SfqIpv6PacketFilter::PerturbHash, this);
+  if(m_perturbTime != 0)
+    m_perturbEvent = Simulator::Schedule (Time(m_perturbTime), &SfqIpv6PacketFilter::PerturbHash, this);
 }
 
 SfqIpv6PacketFilter::~SfqIpv6PacketFilter ()
@@ -190,10 +190,12 @@ SfqIpv6PacketFilter::~SfqIpv6PacketFilter ()
 void
 SfqIpv6PacketFilter::PerturbHash()
 {
-  Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
-  m_perturbation = x->GetInteger();
-  if(m_perturb_time != 0)
-    m_perturbEvent = Simulator::Schedule (Time(m_perturb_time), &SfqIpv6PacketFilter::PerturbHash, this);
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+  m_perturbation = rand->GetInteger();
+  if(m_perturbTime != 0)
+    {
+      m_perturbEvent = Simulator::Schedule (Time(m_perturbTime), &SfqIpv6PacketFilter::PerturbHash, this);
+    }
 }
 
 int32_t
@@ -203,10 +205,10 @@ SfqIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
 
   if(!ipv6Item)
-  {
-    NS_LOG_DEBUG("No match");
-    return PacketFilter::PF_NO_MATCH;
-  }
+    {
+      NS_LOG_DEBUG("No match");
+      return PacketFilter::PF_NO_MATCH;
+    }
 
   Ipv6Header hdr = ipv6Item->GetHeader ();
   Ipv6Address src = hdr.GetSourceAddress ();
@@ -227,6 +229,70 @@ SfqIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   uint32_t hash = Hash32 ((char*) buf, 36);
 
   NS_LOG_DEBUG ("Found Ipv6 packet; hash of the five tuple " << hash);
+
+  return hash;
+}
+
+// ----------------------------------------------------------------- //
+
+NS_OBJECT_ENSURE_REGISTERED (SfqNs2Ipv6PacketFilter);
+
+TypeId
+SfqNs2Ipv6PacketFilter::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::SfqNs2Ipv6PacketFilter")
+    .SetParent<Ipv6PacketFilter> ()
+    .SetGroupName ("Internet")
+    .AddConstructor<SfqNs2Ipv6PacketFilter> ()
+  ;
+  return tid;
+}
+
+SfqNs2Ipv6PacketFilter::SfqNs2Ipv6PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+SfqNs2Ipv6PacketFilter::~SfqNs2Ipv6PacketFilter ()
+{
+  NS_LOG_FUNCTION (this);
+}
+
+int32_t
+SfqNs2Ipv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
+{
+  NS_LOG_FUNCTION (this << item);
+  Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
+
+  if(!ipv6Item)
+    {
+      NS_LOG_DEBUG("No match");
+      return PacketFilter::PF_NO_MATCH;
+    }
+
+  Ipv6Header hdr = ipv6Item->GetHeader ();
+  Ipv6Address src = hdr.GetSourceAddress ();
+  Ipv6Address dest = hdr.GetDestinationAddress ();
+  uint8_t srcBytes[16];
+  uint8_t destBytes[16];
+  src.GetBytes(srcBytes);
+  dest.GetBytes(destBytes);
+  
+  int32_t i = 0;
+  int32_t j = 0;
+  
+  const int32_t PRIME = ((2 << 19) - 1);
+
+  for (uint32_t it = 15; it >= 0; --it)
+    {
+      i = (i * 10 + srcBytes[it]) % PRIME;
+      j = (j * 10 + destBytes[it]) % PRIME;
+    }
+  
+  int32_t k = i + j;
+
+  int32_t hash = (k + (k >> 8) + ~(k >> 4)) % PRIME; // modulo a large prime
+  NS_LOG_DEBUG ("Found Ipv6 packet; hash value " << hash);
 
   return hash;
 }
