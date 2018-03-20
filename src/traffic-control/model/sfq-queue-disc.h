@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2017 NITK Surathkal
+ * Copyright (c) 2018 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -131,7 +131,7 @@ public:
   static constexpr const char* OVERLIMIT_DROP = "Overlimit drop";        //!< Overlimit dropped packets
 
 private:
-  virtual bool DoEnqueue (Ptr<QueueDiscItem> item);
+  virtual bool DoEnqueue (Ptr<QueueDiscItem>);
   virtual Ptr<QueueDiscItem> DoDequeue (void);
   virtual Ptr<const QueueDiscItem> DoPeek (void) const;
   virtual bool CheckConfig (void);
@@ -141,6 +141,7 @@ private:
   uint32_t m_quantum;        //!< Deficit assigned to flows at each round
   uint32_t m_flows;          //!< Number of flow queues
   uint32_t m_fairshare;      //!< Soft limit on number of packets allowed in a single queue
+  bool     m_useNs2Style;    //!< Whether to use an implementation of SFQ that matches ns-2
 
   std::list<Ptr<SfqFlow> > m_flowList;    //!< The list of new flows
 

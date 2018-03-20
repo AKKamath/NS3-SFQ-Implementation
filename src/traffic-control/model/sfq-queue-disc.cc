@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2017 NITK Surathkal
+ * Copyright (c) 2018 NITK Surathkal
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -109,6 +109,11 @@ TypeId SfqQueueDisc::GetTypeId (void)
                    UintegerValue (1024),
                    MakeUintegerAccessor (&SfqQueueDisc::m_flows),
                    MakeUintegerChecker<uint32_t> ())
+    .AddAttribute ("Ns2Style",
+                   "Whether to use ns-2's implementation of SFQ",
+                   BooleanValue (false),
+                   MakeBooleanAccessor (&SfqQueueDisc::m_useNs2Style),
+                   MakeBooleanChecker ())
   ;
   return tid;
 }
@@ -171,6 +176,28 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
 
+  if(m_useNs2Style)
+    {
+      int32_t left = m_limit - GetNPackets ();
+      // Drop packet if number of packets exceeds fairshare or limit is reached
+      if (((int32_t)flow->GetQueueDisc ()->GetNPackets () >= (left >> 1))
+        || (left < (int32_t)m_flows && (int32_t)flow->GetQueueDisc ()->GetNPackets () > (int32_t)m_fairshare)
+        || (left <= 0))
+        {
+          DropBeforeEnqueue (item, OVERLIMIT_DROP);
+          return false;
+        }
+      flow->GetQueueDisc ()->Enqueue (item);
+
+      NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
+      if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
+        {
+          flow->SetStatus (SfqFlow::SFQ_IN_USE);
+          m_flowList.push_back (flow);
+        }
+      return true;
+    }
+
   if (GetNPackets () >= m_limit
     || (m_limit - GetNPackets () < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare))
     {
@@ -196,6 +223,31 @@ Ptr<QueueDiscItem>
 SfqQueueDisc::DoDequeue (void)
 {
   NS_LOG_FUNCTION (this);
+
+  if(m_useNs2Style)
+    {
+      Ptr<SfqFlow> flow;
+      Ptr<QueueDiscItem> item;
+      if (m_flowList.empty ())
+        {
+          NS_LOG_DEBUG ("No flow found to dequeue a packet");
+          return 0;
+        }
+      flow = m_flowList.front ();
+      item = flow->GetQueueDisc ()->Dequeue ();
+      NS_LOG_DEBUG ("Dequeued packet " << item->GetPacket ());
+      if (flow->GetQueueDisc ()->GetNPackets() == 0)
+        {
+          flow->SetStatus (SfqFlow::SFQ_EMPTY_SLOT);
+          m_flowList.pop_front ();
+        }
+      else
+        {
+          m_flowList.push_back (flow);
+          m_flowList.pop_front ();
+        }
+      return item;
+    }
 
   Ptr<SfqFlow> flow;
   Ptr<QueueDiscItem> item;
@@ -294,7 +346,7 @@ SfqQueueDisc::InitializeParams (void)
 
   // we are at initialization time. If the user has not set a quantum value,
   // set the quantum to the MTU of the device
-  if (!m_quantum)
+  if (!m_quantum && !m_useNs2Style)
     {
       Ptr<NetDevice> device = GetNetDevice ();
       NS_ASSERT_MSG (device, "Device not set for the queue disc");
@@ -305,6 +357,11 @@ SfqQueueDisc::InitializeParams (void)
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
   m_queueDiscFactory.SetTypeId ("ns3::PfifoFastQueueDisc");
   m_queueDiscFactory.Set ("Limit", UintegerValue (m_limit));
+  if (m_flows == 0)
+    {
+      m_flows = 16;
+      m_limit = 40;
+    }
   m_fairshare = m_limit / m_flows;
 }
 
