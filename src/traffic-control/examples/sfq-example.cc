@@ -40,9 +40,6 @@
 #include "ns3/point-to-point-module.h"
 #include "ns3/applications-module.h"
 #include "ns3/traffic-control-module.h"
-#include "ns3/sfq-queue-disc.h"
-#include "ns3/ipv4-packet-filter.h"
-#include "ns3/ipv6-packet-filter.h"
 
 using namespace ns3;
 
@@ -73,6 +70,27 @@ Ipv4InterfaceContainer i3i5;
 
 std::stringstream filePlotQueueDisc;
 std::stringstream filePlotQueueDiscAvg;
+
+
+void
+CheckQueueDiscSize (Ptr<QueueDisc> queue)
+{
+  uint32_t qSize = StaticCast<SfqQueueDisc> (queue)->GetNPackets ();
+
+  avgQueueDiscSize += qSize;
+  checkTimes++;
+
+  // check queue disc size every 1/100 of a second
+  Simulator::Schedule (Seconds (0.01), &CheckQueueDiscSize, queue);
+
+  std::ofstream fPlotQueueDisc (filePlotQueueDisc.str ().c_str (), std::ios::out | std::ios::app);
+  fPlotQueueDisc << Simulator::Now ().GetSeconds () << " " << qSize << std::endl;
+  fPlotQueueDisc.close ();
+
+  std::ofstream fPlotQueueDiscAvg (filePlotQueueDiscAvg.str ().c_str (), std::ios::out | std::ios::app);
+  fPlotQueueDiscAvg << Simulator::Now ().GetSeconds () << " " << avgQueueDiscSize / checkTimes << std::endl;
+  fPlotQueueDiscAvg.close ();
+}
 
 void
 BuildAppsTest ()
@@ -137,7 +155,7 @@ main (int argc, char *argv[])
   sink_start_time = global_start_time;
   client_start_time = global_start_time + 1.5;
   global_stop_time = 7.0;
-  sink_stop_time = global_stop_time + 3.0;
+  sink_stop_time = 2.0;//global_stop_time + 3.0;
   client_stop_time = global_stop_time - 2.0;
 
   // Configuration and command line parameter parsing
@@ -174,8 +192,9 @@ main (int argc, char *argv[])
 
   // SFQ params
   NS_LOG_INFO ("Set SFQ params");
-  Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (10 * 1024));
-  Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (1024));
+  Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (10 * 10));
+  Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (10));
+  Config::SetDefault ("ns3::SfqQueueDisc::Ns2Style", BooleanValue (true));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -183,7 +202,7 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchPfifo;
   uint16_t handle = tchPfifo.SetRootQueueDisc ("ns3::PfifoFastQueueDisc");
-  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (10000));
+  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (1000));
 
   TrafficControlHelper tchSfq;
   tchSfq.SetRootQueueDisc ("ns3::SfqQueueDisc");
@@ -278,18 +297,13 @@ main (int argc, char *argv[])
       remove (filePlotQueueDisc.str ().c_str ());
       remove (filePlotQueueDiscAvg.str ().c_str ());
       Ptr<QueueDisc> queue = queueDiscs.Get (0);
+      Simulator::ScheduleNow (&CheckQueueDiscSize, queue);
     }
 
   Simulator::Stop (Seconds (sink_stop_time));
   Simulator::Run ();
 
   QueueDisc::Stats st = queueDiscs.Get (0)->GetStats ();
-
-  /*if (st.GetNDroppedPackets (SfqQueueDisc::FORCED_DROP) != 0)
-    {
-      std::cout << "There should be no drops due to queue full." << std::endl;
-      exit (1);
-    }*/
 
   if (flowMonitor)
     {
@@ -304,8 +318,8 @@ main (int argc, char *argv[])
       std::cout << "*** SFQ stats from Node 2 queue ***" << std::endl;
       //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNFORCED_DROP)
         //        << " drops due to prob mark" << std::endl;
-      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::FORCED_DROP)
-        //        << " drops due to queue limits" << std::endl;
+      std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::OVERLIMIT_DROP)
+                << " drops due to queue limits" << std::endl;
     }
 
   Simulator::Destroy ();
