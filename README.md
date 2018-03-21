@@ -1,7 +1,7 @@
 # Implementation of Stochastic Fair Queueing in NS-3
 ## Course Code: CO300
 
-#Sfq queue disc
+### SFQ Queue Disc
 
 The Stochastic Fair Queuing (SFQ) algorithm is a Queue Management algorithm.
 SFQ is an attempt to distribute network usage fairly among different 
@@ -14,7 +14,7 @@ fairness. Each queue is served according to its current allotment, a positive
 allotment means that the queue may be served, if it is next in order, while a 
 negative allotment means that the next queue in the list should be taken.
 
-#Model Description
+### Model Description
 
 The source code for the Sfq queue disc is located in the directory
 ``src/traffic-control/model`` and consists of 2 files `sfq-queue-disc.h`
@@ -22,7 +22,7 @@ and `sfq-queue-disc.cc` defining a SfqQueueDisc class and a helper
 SfqFlow class. The code was ported to |ns3| based on Linux kernel code
 implemented by Alexey Kuznetsov as well as the ns-2 code for Sfq.
 
-* class :cpp:class:`SfqQueueDisc`: This class implements the main Sfq algorithm:
+* class `SfqQueueDisc`: This class implements the main Sfq algorithm:
 
   * ``SfqQueueDisc::DoEnqueue ()``: This routine uses the configured packet 
 filters to classify the given packet into an appropriate queue. If the filters 
@@ -53,7 +53,7 @@ from the fifo algorithm, it subtracts the size of the packet from the byte
 allotment for the selected queue and returns the packet as the result of the 
 dequeue operation.
 
-* class :cpp:class:`SfqFlow`: This class implements a flow queue, by keeping 
+* class `SfqFlow`: This class implements a flow queue, by keeping 
 its current status (an empty slot, or in use) and its current allotment.
 
 In Linux, by default, packet classification is done by hashing (using a 
@@ -66,9 +66,9 @@ without perturb using the formula (k + (k >> 8) + ~(k >> 4)) % ((2 << 19) - 1)
 where k is the sum of addresses of source and destination in integer format.
 In |ns3|, at least one packet filter must be added to an Sfq queue disc.
 
-#Attributes
+### Attributes
 
-The key attributes that the SfqQueue class holds include the following:
+The key attributes that the SfqQueueDisc class holds include the following:
 
 * ``MaxSize:`` The limit on the maximum number of packets stored by Sfq.
 * ``Flows:`` The number of flow queues managed by Sfq.
@@ -80,7 +80,7 @@ the device (at initialisation time). The ``SfqQueueDisc::SetQuantum ()`` method
 can be used (at any time) to configure a different value. Quantum is unused if 
 ns-2 implementation is followed.
 
-#Examples
+### Examples
 
 A typical usage pattern is to create a traffic control helper and to 
 configure type and attributes of queue disc and filters from the helper. 
@@ -90,10 +90,8 @@ For example, Sfq can be configured as follows:
 
   TrafficControlHelper tch;
   uint16_t handle = tch.SetRootQueueDisc ("ns3::SfqQueueDisc");
-  tch.AddPacketFilter (handle, "ns3::SfqIpv4PacketFilter", 
-"PerturbationTime", UintegerValue (100));
-  tch.AddPacketFilter (handle, "ns3::SfqIpv6PacketFilter", 
-"PerturbationTime", UintegerValue (100));
+  tch.AddPacketFilter (handle, "ns3::SfqIpv4PacketFilter", "PerturbationTime", UintegerValue (100));
+  tch.AddPacketFilter (handle, "ns3::SfqIpv6PacketFilter", "PerturbationTime", UintegerValue (100));
   QueueDiscContainer qdiscs = tch.Install (devices);
 ```
 
@@ -103,9 +101,9 @@ and should be executed as
 ``./waf --run "sfq-example"``   
 
 
-#References
+### References
 
-.. [1] Kuznetsov, Alexey. “Stochastic Fairness Queueing.” Github, github.com/torvalds/linux/blob/master/net/sched/sch_sfq.c
+[1] Kuznetsov, Alexey. “Stochastic Fairness Queueing.” Github, github.com/torvalds/linux/blob/master/net/sched/sch_sfq.c
 
-.. [2] Paul E. McKenney "Stochastic Fairness Queuing",	"Interworking: Research and Experience", v.2, 1991, p.113-131.
+[2] Paul E. McKenney "Stochastic Fairness Queuing",	"Interworking: Research and Experience", v.2, 1991, p.113-131.
 
