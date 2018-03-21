@@ -154,9 +154,9 @@ main (int argc, char *argv[])
   global_start_time = 0.0;
   sink_start_time = global_start_time;
   client_start_time = global_start_time + 1.5;
-  global_stop_time = 7.0;
-  sink_stop_time = 2.0;//global_stop_time + 3.0;
-  client_stop_time = global_stop_time - 2.0;
+  global_stop_time = 3.0;
+  sink_stop_time = global_stop_time + 1.0;
+  client_stop_time = global_stop_time - 1.0;
 
   // Configuration and command line parameter parsing
   // Will only save in the directory if enable opts below
@@ -192,9 +192,8 @@ main (int argc, char *argv[])
 
   // SFQ params
   NS_LOG_INFO ("Set SFQ params");
-  Config::SetDefault ("ns3::SfqQueueDisc::PacketLimit", UintegerValue (10 * 10));
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (10));
-  Config::SetDefault ("ns3::SfqQueueDisc::Ns2Style", BooleanValue (true));
+  Config::SetDefault ("ns3::SfqQueueDisc::MaxSize", StringValue ("100p"));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -202,12 +201,12 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchPfifo;
   uint16_t handle = tchPfifo.SetRootQueueDisc ("ns3::PfifoFastQueueDisc");
-  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxPackets", UintegerValue (1000));
+  tchPfifo.AddInternalQueues (handle, 3, "ns3::DropTailQueue", "MaxSize", StringValue ("1000p"));
 
   TrafficControlHelper tchSfq;
   tchSfq.SetRootQueueDisc ("ns3::SfqQueueDisc");
-  tchSfq.AddPacketFilter(handle,"ns3::SfqIpv4PacketFilter");
-  tchSfq.AddPacketFilter(handle,"ns3::SfqIpv6PacketFilter");
+  tchSfq.AddPacketFilter (handle,"ns3::SfqIpv4PacketFilter");
+  tchSfq.AddPacketFilter (handle,"ns3::SfqIpv6PacketFilter");
 
   NS_LOG_INFO ("Create channels");
   PointToPointHelper p2p;

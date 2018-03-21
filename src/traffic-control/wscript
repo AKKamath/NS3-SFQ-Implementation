@@ -31,10 +31,9 @@ def build(bld):
       'test/codel-queue-disc-test-suite.cc',
       'test/adaptive-red-queue-disc-test-suite.cc',
       'test/pie-queue-disc-test-suite.cc',
-      'test/tc-flow-control-test-suite.cc',
       'test/fifo-queue-disc-test-suite.cc',
       'test/tbf-queue-disc-test-suite.cc',
-      'test/sfq-queue-disc-test-suite.cc'
+      'test/sfq-queue-disc-test-suite.cc',
       'test/tc-flow-control-test-suite.cc'
         ]
 

@@ -63,7 +63,7 @@ void
 SfqQueueDiscNoSuitableFilter::DoRun (void)
 {
   // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4), "Flows", UintegerValue(2));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("4p")), "Flows", UintegerValue (2));
   Ptr<SfqIpv4PacketFilter> filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (filter);
 
@@ -122,7 +122,7 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<SfqQueueDisc> queue,
 void
 SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (8), "Flows", UintegerValue(4));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("8p")), "Flows", UintegerValue (4));
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
   Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -526,7 +526,7 @@ void
 SfqNs2QueueDiscNoSuitableFilter::DoRun (void)
 {
   // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (4), "Flows", UintegerValue(2), "Ns2Style", BooleanValue(true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("4p")), "Flows", UintegerValue (2), "Ns2Style", BooleanValue (true));
   Ptr<SfqNs2Ipv4PacketFilter> filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (filter);
 
@@ -584,7 +584,7 @@ SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<SfqQueueDisc> que
 void
 SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PacketLimit", UintegerValue (12), "Flows", UintegerValue(4), "Ns2Style", BooleanValue(true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("12p")), "Flows", UintegerValue (4), "Ns2Style", BooleanValue (true));
   Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
   Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -671,7 +671,7 @@ SfqNs2QueueDiscTCPFlowsSeparation::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Heade
 void
 SfqNs2QueueDiscTCPFlowsSeparation::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Style", BooleanValue(true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Style", BooleanValue (true));
   Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
   Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -760,7 +760,7 @@ SfqNs2QueueDiscUDPFlowsSeparation::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Heade
 void
 SfqNs2QueueDiscUDPFlowsSeparation::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Style", BooleanValue(true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Style", BooleanValue (true));
   Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
   Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
