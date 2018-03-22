@@ -21,17 +21,17 @@
  *          Mohit P. Tahiliani <tahiliani@nitk.edu.in>
  */
 
- /** Network topology
- *
- *    10Mb/s, 2ms                            10Mb/s, 4ms
- * n0--------------|                    |---------------n4
- *                 |   1.5Mbps/s, 20ms  |
- *                 n2------------------n3
- *    10Mb/s, 3ms  |                    |    10Mb/s, 5ms
- * n1--------------|                    |---------------n5
- *
- *
- */
+/** Network topology
+*
+*    10Mb/s, 2ms                            10Mb/s, 4ms
+* n0--------------|                    |---------------n4
+*                 |   1.5Mbps/s, 20ms  |
+*                 n2------------------n3
+*    10Mb/s, 3ms  |                    |    10Mb/s, 5ms
+* n1--------------|                    |---------------n5
+*
+*
+*/
 
 #include "ns3/core-module.h"
 #include "ns3/network-module.h"
@@ -316,7 +316,7 @@ main (int argc, char *argv[])
     {
       std::cout << "*** SFQ stats from Node 2 queue ***" << std::endl;
       //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNFORCED_DROP)
-        //        << " drops due to prob mark" << std::endl;
+      //        << " drops due to prob mark" << std::endl;
       std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::OVERLIMIT_DROP)
                 << " drops due to queue limits" << std::endl;
     }

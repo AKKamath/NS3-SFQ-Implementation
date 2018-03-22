@@ -99,6 +99,14 @@ TypeId SfqQueueDisc::GetTypeId (void)
     .SetParent<QueueDisc> ()
     .SetGroupName ("TrafficControl")
     .AddConstructor<SfqQueueDisc> ()
+    .AddAttribute ("PacketLimit",
+                   "The hard limit on the real queue size, measured in packets",
+                   UintegerValue (10 * 1024),
+                   MakeUintegerAccessor (&SfqQueueDisc::SetLimit,
+                                         &SfqQueueDisc::GetLimit),
+                   MakeUintegerChecker<uint32_t> (),
+                   TypeId::DEPRECATED,
+                   "Use the MaxSize attribute instead")
     .AddAttribute ("MaxSize",
                    "The maximum number of packets accepted by this queue disc",
                    QueueSizeValue (QueueSize ("102400p")),
@@ -120,7 +128,8 @@ TypeId SfqQueueDisc::GetTypeId (void)
 }
 
 SfqQueueDisc::SfqQueueDisc ()
-  : m_quantum (0)
+  : QueueDisc (QueueDiscSizePolicy::MULTIPLE_QUEUES, QueueSizeUnit::PACKETS),
+    m_quantum (0)
 {
   NS_LOG_FUNCTION (this);
 }
@@ -182,8 +191,8 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       uint32_t left = GetMaxSize ().GetValue () - GetNPackets ();
       // Drop packet if number of packets exceeds fairshare or limit is reached
       if ( (flow->GetQueueDisc ()->GetNPackets () >= (left >> 1))
-        || (left < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare)
-        || (left <= 0))
+           || (left < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare)
+           || (left <= 0))
         {
           DropBeforeEnqueue (item, OVERLIMIT_DROP);
           return false;
@@ -200,7 +209,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
     }
 
   if (GetNPackets () >= GetMaxSize ().GetValue ()
-    || (GetMaxSize ().GetValue () - GetNPackets () < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare))
+      || (GetMaxSize ().GetValue () - GetNPackets () < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare))
     {
       DropBeforeEnqueue (item, OVERLIMIT_DROP);
       return false;
@@ -212,7 +221,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow->SetAllot (m_quantum);
       m_flowList.push_back (flow);
     }
-  
+
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
@@ -293,9 +302,10 @@ SfqQueueDisc::DoDequeue (void)
         {
           NS_LOG_DEBUG ("Dequeued packet " << item->GetPacket ());
         }
-    } while (item == 0);
+    }
+  while (item == 0);
 
-  flow->IncreaseAllot (-item->GetSize ());
+  flow->IncreaseAllot (item->GetSize () * -1);
 
   return item;
 }
@@ -305,14 +315,21 @@ SfqQueueDisc::DoPeek (void)
 {
   NS_LOG_FUNCTION (this);
 
-  Ptr<SfqFlow> flow;
+  return PeekDequeued ();
+}
 
-  if (!m_flowList.empty ())
-    {
-      flow = m_flowList.front ();
-    }
+void
+SfqQueueDisc::SetLimit (uint32_t limit)
+{
+  NS_LOG_FUNCTION (this << limit);
+  SetMaxSize (QueueSize (QueueSizeUnit::PACKETS, limit));
+}
 
-  return flow->GetQueueDisc ()->Peek ();
+uint32_t
+SfqQueueDisc::GetLimit (void) const
+{
+  NS_LOG_FUNCTION (this);
+  return GetMaxSize ().GetValue ();
 }
 
 bool

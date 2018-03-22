@@ -484,7 +484,7 @@ SfqQueueDiscDeficit::DoRun (void)
 
   // Dequeue a packet
   queueDisc->Dequeue ();
-  /* 
+  /*
    * The first flow is in the list of queues but has a negative deficit, thus it gets a quantun
    * of deficit (-90+90=0) and is moved to the end of the list of queues. Then, the second flow (which has a
    * positive deficit) is selected, but the second flow is empty and thus it is set to empty. The first flow is
@@ -822,13 +822,13 @@ public:
 SfqQueueDiscTestSuite::SfqQueueDiscTestSuite ()
   : TestSuite ("sfq-queue-disc", UNIT)
 {
+  // Test cases for default implementation of SFQ
   AddTestCase (new SfqQueueDiscNoSuitableFilter, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscIPFlowsSeparationAndPacketLimit, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscTCPFlowsSeparation, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscUDPFlowsSeparation, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscDeficit, TestCase::QUICK);
-
-
+  // Test cases for ns-2 style implementation of SFQ
   AddTestCase (new SfqNs2QueueDiscNoSuitableFilter, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscTCPFlowsSeparation, TestCase::QUICK);

@@ -37,7 +37,8 @@ namespace ns3 {
  * \brief A flow queue used by the Sfq queue disc
  */
 
-class SfqFlow : public QueueDiscClass {
+class SfqFlow : public QueueDiscClass
+{
 public:
   /**
    * \brief Get the type ID.
@@ -56,10 +57,10 @@ public:
    * \brief Used to determine the status of this flow queue
    */
   enum FlowStatus
-    {
-      SFQ_EMPTY_SLOT,
-      SFQ_IN_USE
-    };
+  {
+    SFQ_EMPTY_SLOT,
+    SFQ_IN_USE
+  };
 
   /**
    * \brief Set the deficit for this flow
@@ -99,7 +100,8 @@ private:
  * \brief An Sfq packet queue disc
  */
 
-class SfqQueueDisc : public QueueDisc {
+class SfqQueueDisc : public QueueDisc
+{
 public:
   /**
    * \brief Get the type ID.
@@ -113,24 +115,42 @@ public:
 
   virtual ~SfqQueueDisc ();
 
-   /**
-    * \brief Set the quantum value.
-    *
-    * \param quantum The number of bytes each queue gets to dequeue on each round of the uling algorithm
-    */
-   void SetQuantum (uint32_t quantum);
+  /**
+   * \brief Set the quantum value.
+   *
+   * \param quantum The number of bytes each queue gets to dequeue on each round of the uling algorithm
+   */
+  void SetQuantum (uint32_t quantum);
 
-   /**
-    * \brief Get the quantum value.
-    *
-    * \returns The number of bytes each queue gets to dequeue on each round of the uling algorithm
-    */
-   uint32_t GetQuantum (void) const;
+  /**
+   * \brief Get the quantum value.
+   *
+   * \returns The number of bytes each queue gets to dequeue on each round of the uling algorithm
+   */
+  uint32_t GetQuantum (void) const;
 
   // Reasons for dropping packets
   static constexpr const char* OVERLIMIT_DROP = "Overlimit drop";        //!< Overlimit dropped packets
 
 private:
+  /**
+   * \brief Set the limit of this queue disc.
+   *
+   * \param limit The limit of this queue disc.
+   * \deprecated This method will go away in future versions of ns-3.
+   * See instead SetMaxSize()
+   */
+  void SetLimit (uint32_t limit);
+
+  /**
+   * \brief Get the limit of this queue disc.
+   *
+   * \returns The limit of this queue disc.
+   * \deprecated This method will go away in future versions of ns-3.
+   * See instead GetMaxSize()
+   */
+  uint32_t GetLimit (void) const;
+
   virtual bool DoEnqueue (Ptr<QueueDiscItem>);
   virtual Ptr<QueueDiscItem> DoDequeue (void);
   virtual Ptr<const QueueDiscItem> DoPeek (void);
