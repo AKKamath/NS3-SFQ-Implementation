@@ -105,9 +105,33 @@ For example, Sfq can be configured as follows:
 
   TrafficControlHelper tch;
   uint16_t handle = tch.SetRootQueueDisc ("ns3::SfqQueueDisc");
-  tch.AddPacketFilter (handle, "ns3::SfqIpv4PacketFilter", 
-"PerturbationTime", UintegerValue (100));
-  tch.AddPacketFilter (handle, "ns3::SfqIpv6PacketFilter", 
-"PerturbationTime", UintegerValue (100));
+  tch.AddPacketFilter (handle, "ns3::SfqIpv4PacketFilter", "PerturbationTime", UintegerValue (100));
+  tch.AddPacketFilter (handle, "ns3::SfqIpv6PacketFilter", "PerturbationTime", UintegerValue (100));
   QueueDiscContainer qdiscs = tch.Install (devices);
+
+Validation
+**********
+
+The Sfq model is tested using :cpp:class:`SfqQueueDiscTestSuite` class defined in `src/traffic-control/test/sfq-queue-disc-test-suite.cc`.  The suite includes 10 test cases:
+
+* Test 1: The first test checks that packets that cannot be classified by any available filter are added to a unique flow.
+* Test 2: The second test checks that IPv4 packets having distinct destination addresses are enqueued into different flow queues, and that the flows correctly drop packets when limits are reached. It also ensures dequeuing from an empty queue returns 0.
+* Test 3: The third test checks that TCP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 4: The fourth test checks that UDP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 5: The fifth test checks the dequeue operation and the deficit round robin-based scheduler.
+* Test 6: The sixth test checks that similar packets are enqueued into different flows after the perturbation time is reached.
+* Test 7: The seventh test checks for ns-2 style implementation that packets that cannot be classified by any available filter are added to a unique flow.
+* Test 8: The eighth test checks for ns-2 style implementation that IPv4 packets having distinct destination addresses are enqueued into different flow queues, and that the flows correctly drop packets when limits are reached. It also ensures dequeuing from an empty queue returns 0.
+* Test 9: The ninth test checks for ns-2 style implementation that TCP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 10: The tenth test checks for ns-2 style implementation that UDP packets with distinct destination addresses are enqueued into different flow queues.
+
+The test suite can be run using the following commands::
+
+  $ ./waf configure --enable-examples --enable-tests
+  $ ./waf build
+  $ ./test.py -s sfq-queue-disc
+
+or::
+
+  $ NS_LOG="SfqQueueDisc" ./waf --run "test-runner --suite=sfq-queue-disc"
 
