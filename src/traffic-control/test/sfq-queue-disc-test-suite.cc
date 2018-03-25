@@ -501,6 +501,64 @@ SfqQueueDiscDeficit::DoRun (void)
 }
 
 /**
+ * This class tests whether packets get hashed into different flows after perturbation takes place
+ */
+class SfqQueueDiscPerturbationHashChange : public TestCase
+{
+public:
+  SfqQueueDiscPerturbationHashChange ();
+  virtual ~SfqQueueDiscPerturbationHashChange ();
+
+private:
+
+  
+  virtual void DoRun (void);
+  void AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr);
+};
+
+SfqQueueDiscPerturbationHashChange::SfqQueueDiscPerturbationHashChange ()
+  : TestCase ("Test hash perturbation changes")
+{
+}
+
+SfqQueueDiscPerturbationHashChange::~SfqQueueDiscPerturbationHashChange ()
+{
+}
+
+void
+SfqQueueDiscPerturbationHashChange::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr)
+{
+  Ptr<Packet> p = Create<Packet> (100);
+  Address dest;
+  Ptr<Ipv4QueueDiscItem> item = Create<Ipv4QueueDiscItem> (p, dest, 0, hdr);
+  queue->Enqueue (item);
+  NS_TEST_ASSERT_MSG_EQ (queue->GetNQueueDiscClasses (), 2, "Two flow queues should have been created");
+}
+
+void
+SfqQueueDiscPerturbationHashChange::DoRun (void)
+{
+  // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
+  Ptr<SfqQueueDisc> queueDisc = CreateObject<SfqQueueDisc> ();
+  Ptr<SfqIpv4PacketFilter> filter = CreateObjectWithAttributes<SfqIpv4PacketFilter> ("PerturbationTime", TimeValue (MilliSeconds (100)));
+  queueDisc->AddPacketFilter (filter);
+
+  queueDisc->SetQuantum (1500);
+  queueDisc->Initialize ();
+
+  Ipv4Header ipv4Header;
+  Ptr<Packet> p = Create<Packet> (100);
+  Address dest;
+  Ptr<Ipv4QueueDiscItem> item = Create<Ipv4QueueDiscItem> (p, dest, 0, ipv4Header);
+  queueDisc->Enqueue (item);
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "One flow queue should have been created");
+
+  Simulator::Schedule (MilliSeconds (150), &SfqQueueDiscPerturbationHashChange::AddPacket, this, queueDisc, ipv4Header);
+  Simulator::Stop(MilliSeconds (155));
+  Simulator::Run();
+}
+
+/**
  * This class tests packets for which there is no suitable filter
  */
 class SfqNs2QueueDiscNoSuitableFilter : public TestCase
@@ -828,6 +886,7 @@ SfqQueueDiscTestSuite::SfqQueueDiscTestSuite ()
   AddTestCase (new SfqQueueDiscTCPFlowsSeparation, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscUDPFlowsSeparation, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscDeficit, TestCase::QUICK);
+  AddTestCase (new SfqQueueDiscPerturbationHashChange, TestCase::QUICK);
   // Test cases for ns-2 style implementation of SFQ
   AddTestCase (new SfqNs2QueueDiscNoSuitableFilter, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit, TestCase::QUICK);
