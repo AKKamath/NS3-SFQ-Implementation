@@ -510,8 +510,6 @@ public:
   virtual ~SfqQueueDiscPerturbationHashChange ();
 
 private:
-
-  
   virtual void DoRun (void);
   void AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr);
 };
@@ -554,8 +552,8 @@ SfqQueueDiscPerturbationHashChange::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "One flow queue should have been created");
 
   Simulator::Schedule (MilliSeconds (150), &SfqQueueDiscPerturbationHashChange::AddPacket, this, queueDisc, ipv4Header);
-  Simulator::Stop(MilliSeconds (155));
-  Simulator::Run();
+  Simulator::Stop (MilliSeconds (155));
+  Simulator::Run ();
 }
 
 /**
