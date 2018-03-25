@@ -179,7 +179,7 @@ SfqIpv4PacketFilter::GetTypeId (void)
 SfqIpv4PacketFilter::SfqIpv4PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
-  if(m_perturbTime != 0)
+  if (m_perturbTime != 0)
     {
       Simulator::Schedule (m_perturbTime, &SfqIpv4PacketFilter::PerturbHash, this);
     }
@@ -191,14 +191,15 @@ SfqIpv4PacketFilter::~SfqIpv4PacketFilter ()
 }
 
 void
-SfqIpv4PacketFilter::PerturbHash()
+SfqIpv4PacketFilter::PerturbHash ()
 {
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
-  m_perturbation = rand->GetInteger();
-  if(m_perturbTime != 0)
+  if (m_perturbTime == 0)
     {
-      Simulator::Schedule (m_perturbTime, &SfqIpv4PacketFilter::PerturbHash, this);
+      return;
     }
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+  m_perturbation = rand->GetInteger ();
+  Simulator::Schedule (m_perturbTime, &SfqIpv4PacketFilter::PerturbHash, this);
 }
 
 int32_t
@@ -207,9 +208,9 @@ SfqIpv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
   NS_LOG_FUNCTION (this << item);
   Ptr<Ipv4QueueDiscItem> ipv4Item = DynamicCast<Ipv4QueueDiscItem> (item);
 
-  if(!ipv4Item)
+  if (!ipv4Item)
     {
-      NS_LOG_DEBUG("No match");
+      NS_LOG_DEBUG ("No match");
       return PacketFilter::PF_NO_MATCH;
     }
 
@@ -267,9 +268,9 @@ SfqNs2Ipv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
   NS_LOG_FUNCTION (this << item);
   Ptr<Ipv4QueueDiscItem> ipv4Item = DynamicCast<Ipv4QueueDiscItem> (item);
 
-  if(!ipv4Item)
+  if (!ipv4Item)
     {
-      NS_LOG_DEBUG("No match");
+      NS_LOG_DEBUG ("No match");
       return PacketFilter::PF_NO_MATCH;
     }
 
@@ -277,8 +278,8 @@ SfqNs2Ipv4PacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
   Ipv4Address src = hdr.GetSource ();
   Ipv4Address dest = hdr.GetDestination ();
 
-  int32_t i = src.Get();
-  int32_t j = dest.Get();
+  int32_t i = src.Get ();
+  int32_t j = dest.Get ();
   int32_t k = i + j;
 
   int32_t hash = (k + (k >> 8) + ~(k >> 4)) % ((2 << 19) - 1); // modulo a large prime

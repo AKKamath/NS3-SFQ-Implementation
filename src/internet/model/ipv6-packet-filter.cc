@@ -178,7 +178,7 @@ SfqIpv6PacketFilter::GetTypeId (void)
 SfqIpv6PacketFilter::SfqIpv6PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
-  if(m_perturbTime != 0)
+  if (m_perturbTime != 0)
     {
       Simulator::Schedule (m_perturbTime, &SfqIpv6PacketFilter::PerturbHash, this);
     }
@@ -190,14 +190,15 @@ SfqIpv6PacketFilter::~SfqIpv6PacketFilter ()
 }
 
 void
-SfqIpv6PacketFilter::PerturbHash()
+SfqIpv6PacketFilter::PerturbHash ()
 {
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
-  m_perturbation = rand->GetInteger();
-  if(m_perturbTime != 0)
+  if (m_perturbTime == 0)
     {
-      Simulator::Schedule (m_perturbTime, &SfqIpv6PacketFilter::PerturbHash, this);
+      return;
     }
+  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
+  m_perturbation = rand->GetInteger ();
+  Simulator::Schedule (m_perturbTime, &SfqIpv6PacketFilter::PerturbHash, this);
 }
 
 int32_t
@@ -206,9 +207,9 @@ SfqIpv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   NS_LOG_FUNCTION (this << item);
   Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
 
-  if(!ipv6Item)
+  if (!ipv6Item)
     {
-      NS_LOG_DEBUG("No match");
+      NS_LOG_DEBUG ("No match");
       return PacketFilter::PF_NO_MATCH;
     }
 
@@ -266,9 +267,9 @@ SfqNs2Ipv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   NS_LOG_FUNCTION (this << item);
   Ptr<Ipv6QueueDiscItem> ipv6Item = DynamicCast<Ipv6QueueDiscItem> (item);
 
-  if(!ipv6Item)
+  if (!ipv6Item)
     {
-      NS_LOG_DEBUG("No match");
+      NS_LOG_DEBUG ("No match");
       return PacketFilter::PF_NO_MATCH;
     }
 
@@ -277,12 +278,12 @@ SfqNs2Ipv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
   Ipv6Address dest = hdr.GetDestinationAddress ();
   uint8_t srcBytes[16];
   uint8_t destBytes[16];
-  src.GetBytes(srcBytes);
-  dest.GetBytes(destBytes);
-  
+  src.GetBytes (srcBytes);
+  dest.GetBytes (destBytes);
+
   int32_t i = 0;
   int32_t j = 0;
-  
+
   const int32_t PRIME = ((2 << 19) - 1);
 
   for (uint32_t it = 15; it >= 0; --it)
@@ -290,7 +291,7 @@ SfqNs2Ipv6PacketFilter::DoClassify (Ptr< QueueDiscItem > item) const
       i = (i * 10 + srcBytes[it]) % PRIME;
       j = (j * 10 + destBytes[it]) % PRIME;
     }
-  
+
   int32_t k = i + j;
 
   int32_t hash = (k + (k >> 8) + ~(k >> 4)) % PRIME; // modulo a large prime
