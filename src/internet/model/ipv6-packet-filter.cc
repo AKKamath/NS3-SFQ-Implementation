@@ -168,9 +168,9 @@ SfqIpv6PacketFilter::GetTypeId (void)
     .AddConstructor<SfqIpv6PacketFilter> ()
     .AddAttribute ("PerturbationTime",
                    "The time duration after which salt used as an additional input to the hash function is changed",
-                   UintegerValue (100),
-                   MakeUintegerAccessor (&SfqIpv6PacketFilter::m_perturbTime),
-                   MakeUintegerChecker<uint32_t> ())
+                   TimeValue (MilliSeconds (100)),
+                   MakeTimeAccessor (&SfqIpv6PacketFilter::m_perturbTime),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -179,7 +179,9 @@ SfqIpv6PacketFilter::SfqIpv6PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
   if(m_perturbTime != 0)
-    m_perturbEvent = Simulator::Schedule (Time(m_perturbTime), &SfqIpv6PacketFilter::PerturbHash, this);
+    {
+      Simulator::Schedule (m_perturbTime, &SfqIpv6PacketFilter::PerturbHash, this);
+    }
 }
 
 SfqIpv6PacketFilter::~SfqIpv6PacketFilter ()
@@ -194,7 +196,7 @@ SfqIpv6PacketFilter::PerturbHash()
   m_perturbation = rand->GetInteger();
   if(m_perturbTime != 0)
     {
-      m_perturbEvent = Simulator::Schedule (Time(m_perturbTime), &SfqIpv6PacketFilter::PerturbHash, this);
+      Simulator::Schedule (m_perturbTime, &SfqIpv6PacketFilter::PerturbHash, this);
     }
 }
 
