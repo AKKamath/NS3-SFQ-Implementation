@@ -24,11 +24,12 @@
 #include "ns3/log.h"
 #include "ns3/enum.h"
 #include "ns3/uinteger.h"
+#include "ns3/double.h"
+#include "ns3/timer.h"
 #include "ns3/tcp-header.h"
 #include "ns3/udp-header.h"
 #include "ipv4-queue-disc-item.h"
 #include "ipv4-packet-filter.h"
-#include "ns3/timer.h"
 #include "ns3/event-id.h"
 #include "ns3/random-variable-stream.h"
 #include "ns3/simulator.h"
@@ -179,6 +180,9 @@ SfqIpv4PacketFilter::GetTypeId (void)
 SfqIpv4PacketFilter::SfqIpv4PacketFilter ()
 {
   NS_LOG_FUNCTION (this);
+  rand = CreateObject<UniformRandomVariable> ();
+  rand->SetAttribute ("Min", DoubleValue (0));
+  rand->SetAttribute ("Max", DoubleValue (UINT32_MAX));
   if (m_perturbTime != 0)
     {
       Simulator::Schedule (m_perturbTime, &SfqIpv4PacketFilter::PerturbHash, this);
@@ -197,8 +201,8 @@ SfqIpv4PacketFilter::PerturbHash ()
     {
       return;
     }
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
   m_perturbation = rand->GetInteger ();
+  NS_LOG_DEBUG ("Set new perturbation value to " << m_perturbation);
   Simulator::Schedule (m_perturbTime, &SfqIpv4PacketFilter::PerturbHash, this);
 }
 

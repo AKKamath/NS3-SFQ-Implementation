@@ -102,8 +102,9 @@ private:
   virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
   virtual void PerturbHash ();
 
-  uint32_t m_perturbation;                //!< hash perturbation value
+  uint32_t m_perturbation;                 //!< hash perturbation value
   Time m_perturbTime = MilliSeconds (100); //!< interval after which perturbation takes place
+  Ptr<UniformRandomVariable> rand;         //!< random number generator for perturbation
 };
 
 /**
