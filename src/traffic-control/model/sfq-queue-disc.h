@@ -157,7 +157,7 @@ private:
   virtual bool CheckConfig (void);
   virtual void InitializeParams (void);
 
-  uint32_t m_limit;          //!< Maximum number of packets in the queue disc
+  uint32_t m_flowLimit;      //!< Maximum number of packets in each flow
   uint32_t m_quantum;        //!< Deficit assigned to flows at each round
   uint32_t m_flows;          //!< Number of flow queues
   uint32_t m_fairshare;      //!< Soft limit on number of packets allowed in a single queue

@@ -113,6 +113,11 @@ TypeId SfqQueueDisc::GetTypeId (void)
                    MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
                                           &QueueDisc::GetMaxSize),
                    MakeQueueSizeChecker ())
+    .AddAttribute ("FlowLimit",
+                   "The maximum number of packets each flow can have",
+                   UintegerValue (0),
+                   MakeUintegerAccessor (&SfqQueueDisc::m_flowLimit),
+                   MakeUintegerChecker<uint32_t> ())
     .AddAttribute ("Flows",
                    "The number of queues into which the incoming packets are classified",
                    UintegerValue (1024),
@@ -371,15 +376,16 @@ SfqQueueDisc::InitializeParams (void)
       m_quantum = device->GetMtu ();
       NS_LOG_DEBUG ("Setting the quantum to the MTU of the device: " << m_quantum);
     }
-
-  m_flowFactory.SetTypeId ("ns3::SfqFlow");
-  m_queueDiscFactory.SetTypeId ("ns3::FifoQueueDisc");
-  m_queueDiscFactory.Set ("MaxSize", QueueSizeValue (GetMaxSize ()));
   if (m_flows == 0 || GetMaxSize ().GetValue () == 0)
     {
       m_flows = 16;
       SetMaxSize (QueueSize ("40p"));
     }
+  if (m_flowLimit == 0)
+    m_flowLimit = GetMaxSize ().GetValue ();
+  m_flowFactory.SetTypeId ("ns3::SfqFlow");
+  m_queueDiscFactory.SetTypeId ("ns3::FifoQueueDisc");
+  m_queueDiscFactory.Set ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, m_flowLimit)));
   m_fairshare = GetMaxSize ().GetValue () / m_flows;
 }
 
