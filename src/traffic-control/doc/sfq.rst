@@ -87,6 +87,7 @@ The key attributes that the SfqQueue class holds include the following:
 * ``MaxSize:`` The limit on the maximum number of packets stored by Sfq.
 * ``Flows:`` The number of flow queues managed by Sfq.
 * ``Ns2Style:`` Whether to use the ns-2 version of implementation.
+* ``FlowLimit:`` The limit on number of packets each flow can hold.
 
 Note that the quantum, i.e., the number of bytes each queue gets to dequeue on
 each round of the scheduling algorithm, is set by default to the MTU size of 
