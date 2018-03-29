@@ -64,7 +64,7 @@ int main (int argc, char *argv[])
   bool outputToFile = true;
   std::string fileName = "scenario-two.txt";
   std::ofstream file (fileName.c_str ());
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("160p")), "Flows", UintegerValue (160));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("160p")), "Flows", UintegerValue (160), "FlowLimit", UintegerValue(5));
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObjectWithAttributes<SfqIpv6PacketFilter> ("PerturbationTime", TimeValue (MilliSeconds (1000)));
   Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObjectWithAttributes<SfqIpv4PacketFilter> ("PerturbationTime", TimeValue (MilliSeconds (1000)));
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -72,7 +72,6 @@ int main (int argc, char *argv[])
   // Set quantum to size of a single packet
   queueDisc->SetQuantum (120);
   queueDisc->Initialize ();
-
 
   // Insert packets every millisecond
   for (uint32_t i = 0; i < noOfPackets; ++i)
