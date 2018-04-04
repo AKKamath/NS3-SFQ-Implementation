@@ -34,10 +34,6 @@ int main (int argc, char *argv[])
   std::ofstream file (fileName.c_str ());
   Ptr<SfqIpv4PacketFilter> filter = CreateObject<SfqIpv4PacketFilter> ();
   
-  Ptr<UniformRandomVariable> rand = CreateObject<UniformRandomVariable> ();
-  rand->SetAttribute ("Min", DoubleValue (0));
-  rand->SetAttribute ("Max", DoubleValue (UINT32_MAX));
-  
   Ipv4Header hdr;
   hdr.SetPayloadSize (100);
   hdr.SetProtocol (7);
@@ -51,9 +47,9 @@ int main (int argc, char *argv[])
       // Insert noOfPackets into queue
       for (uint32_t i = 0; i < noOfPackets; ++i)
         {
-            // Set source and destination addresses to random values
-            hdr.SetSource (Ipv4Address (rand->GetInteger ()));
-            hdr.SetDestination (Ipv4Address (rand->GetInteger ()));
+            // Set source and destination addresses to packet number, instead of generating random values
+            hdr.SetSource (Ipv4Address (i));
+            hdr.SetDestination (Ipv4Address (i));
             Ptr<Ipv4QueueDiscItem> item = Create<Ipv4QueueDiscItem> (p, dest, 0, hdr);
             // Add to corresponding queue
             ++queue[filter->Classify (item) % queueSize];            
@@ -67,7 +63,7 @@ int main (int argc, char *argv[])
       NS_LOG_DEBUG ("For queue size " << queueSize << " the standard deviation is " << deviation);
       if (outputToFile)
         {
-          file << queueSize << "\t" << deviation << "\n";
+          file << queueSize << " " << deviation << "\n";
         }
     }
 
