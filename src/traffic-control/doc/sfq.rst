@@ -29,37 +29,11 @@ implemented by Alexey Kuznetsov as well as the ns-2 code for Sfq.
 
 * class :cpp:class:`SfqQueueDisc`: This class implements the main Sfq algorithm:
 
-  * ``SfqQueueDisc::DoEnqueue ()``: This routine uses the configured packet 
-filters to classify the given packet into an appropriate queue. If the filters 
-are unable to classify the packet, the packet is added to a spare queue. If the
-queue is an empty slot, it is added to the end of the list of queues, and its
-allotment is initialized to the configured quantum. Otherwise, the queue is
- left in its current queue list. In ns-2 mode, a quantum is not allocated.
-In case the queue is already full, or the number of remaining number of slots
-is less than the number of queues, and the current queue has already exceeded
-its allocated space (which is given by total limit / number of queues), then
-the incoming packet is dropped.
+  * ``SfqQueueDisc::DoEnqueue ()``: This routine uses the configured packet filters to classify the given packet into an appropriate queue. If the filters are unable to classify the packet, the packet is added to a spare queue. If the queue is an empty slot, it is added to the end of the list of queues, and its allotment is initialized to the configured quantum. Otherwise, the queue is left in its current queue list. In ns-2 mode, a quantum is not allocated. In case the queue is already full, or the number of remaining number of slots is less than the number of queues, and the current queue has already exceeded its allocated space (which is given by total limit / number of queues), then the incoming packet is dropped.
 
-  * ``SfqQueueDisc::DoDequeue ()``: In the case of ns-2 mode, the first packet 
-in the queue at the front of the round robin is removed and returned. If the 
-queue still has remaining packets, it is removed from the front of the round 
-robin and placed at the end. In the case of default execution, the first task 
-performed is selecting a queue from which to dequeue a packet. The scheduler 
-looks at the front of the list, if the current queue has a negative allotment, 
-its allotment is increased by quantum and sent to the back. Otherwise, that 
-queue is selected for dequeue. After having selected a queue from which to 
-dequeue a packet, the fifo algorithm is invoked on that queue. If the fifo 
-algorithm does not return a packet, then the queue must be empty, and the 
-scheduler removes it from the list, marking it as an unused slot to be added 
-back (as a new queue) the next time a packet for that queue arrives. Then 
-(since no packet was available for dequeue), the whole dequeue process is 
-restarted from the beginning. If, instead, the scheduler did get a packet back
-from the fifo algorithm, it subtracts the size of the packet from the byte 
-allotment for the selected queue and returns the packet as the result of the 
-dequeue operation.
+  * ``SfqQueueDisc::DoDequeue ()``: In the case of ns-2 mode, the first packet in the queue at the front of the round robin is removed and returned. If the queue still has remaining packets, it is removed from the front of the round robin and placed at the end. In the case of default execution, the first task performed is selecting a queue from which to dequeue a packet. The scheduler looks at the front of the list, if the current queue has a negative allotment, its allotment is increased by quantum and sent to the back. Otherwise, that queue is selected for dequeue. After having selected a queue from which to dequeue a packet, the fifo algorithm is invoked on that queue. If the fifo algorithm does not return a packet, then the queue must be empty, and the scheduler removes it from the list, marking it as an unused slot to be added back (as a new queue) the next time a packet for that queue arrives. Then (since no packet was available for dequeue), the whole dequeue process is restarted from the beginning. If, instead, the scheduler did get a packet back from the fifo algorithm, it subtracts the size of the packet from the byte allotment for the selected queue and returns the packet as the result of the dequeue operation.
 
-* class :cpp:class:`SfqFlow`: This class implements a flow queue, by keeping 
-its current status (an empty slot, or in use) and its current allotment.
+* class :cpp:class:`SfqFlow`: This class implements a flow queue, by keeping its current status (an empty slot, or in use) and its current allotment.
 
 In Linux, by default, packet classification is done by hashing (using a 
 Jenkins hash function) and taking the hash value modulo the number of queues.
@@ -86,7 +60,7 @@ The key attributes that the SfqQueue class holds include the following:
 
 * ``MaxSize:`` The limit on the maximum number of packets stored by Sfq.
 * ``Flows:`` The number of flow queues managed by Sfq.
-* ``Ns2Style:`` Whether to use the ns-2 version of implementation.
+* ``Ns2Impl:`` If enabled uses ns-2 implementation of SFQ.
 * ``FlowLimit:`` The limit on number of packets each flow can hold.
 
 Note that the quantum, i.e., the number of bytes each queue gets to dequeue on
