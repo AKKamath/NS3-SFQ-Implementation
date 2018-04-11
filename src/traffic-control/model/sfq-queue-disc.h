@@ -63,18 +63,18 @@ public:
   };
 
   /**
-   * \brief Set the deficit for this flow
-   * \param deficit the deficit for this flow
+   * \brief Set the allotment for this flow
+   * \param allot the allotment for this flow
    */
   void SetAllot (uint32_t allot);
   /**
-   * \brief Get the deficit for this flow
-   * \return the deficit for this flow
+   * \brief Get the allotment for this flow
+   * \return the allotment for this flow
    */
   int32_t GetAllot (void) const;
   /**
-   * \brief Increase the deficit for this flow
-   * \param deficit the amount by which the deficit is to be increased
+   * \brief Increase the allotment for this flow
+   * \param allot the amount by which the allotment is to be increased
    */
   void IncreaseAllot (int32_t allot);
   /**
@@ -89,7 +89,7 @@ public:
   FlowStatus GetStatus (void) const;
 
 private:
-  int32_t m_allot;    //!< the deficit for this flow
+  int32_t m_allot;      //!< the allotment for this flow
   FlowStatus m_status;  //!< the status of this flow
 };
 
@@ -158,10 +158,10 @@ private:
   virtual void InitializeParams (void);
 
   uint32_t m_flowLimit;      //!< Maximum number of packets in each flow
-  uint32_t m_quantum;        //!< Deficit assigned to flows at each round
+  uint32_t m_quantum;        //!< Allotment assigned to flows at each round
   uint32_t m_flows;          //!< Number of flow queues
   uint32_t m_fairshare;      //!< Soft limit on number of packets allowed in a single queue
-  bool     m_useNs2Style;    //!< Whether to use an implementation of SFQ that matches ns-2
+  bool     m_useNs2Impl;     //!< Whether to use an implementation of SFQ that matches ns-2
 
   std::list<Ptr<SfqFlow> > m_flowList;    //!< The list of new flows
 

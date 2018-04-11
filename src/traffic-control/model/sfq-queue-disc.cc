@@ -109,7 +109,7 @@ TypeId SfqQueueDisc::GetTypeId (void)
                    "Use the MaxSize attribute instead")
     .AddAttribute ("MaxSize",
                    "The maximum number of packets accepted by this queue disc",
-                   QueueSizeValue (QueueSize ("102400p")),
+                   QueueSizeValue (QueueSize ("10240p")),
                    MakeQueueSizeAccessor (&QueueDisc::SetMaxSize,
                                           &QueueDisc::GetMaxSize),
                    MakeQueueSizeChecker ())
@@ -123,10 +123,10 @@ TypeId SfqQueueDisc::GetTypeId (void)
                    UintegerValue (1024),
                    MakeUintegerAccessor (&SfqQueueDisc::m_flows),
                    MakeUintegerChecker<uint32_t> ())
-    .AddAttribute ("Ns2Style",
-                   "Whether to use ns-2's implementation of SFQ",
+    .AddAttribute ("Ns2Impl",
+                   "If enabled uses ns-2 implementation of SFQ",
                    BooleanValue (false),
-                   MakeBooleanAccessor (&SfqQueueDisc::m_useNs2Style),
+                   MakeBooleanAccessor (&SfqQueueDisc::m_useNs2Impl),
                    MakeBooleanChecker ())
   ;
   return tid;
@@ -191,7 +191,7 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
 
-  if (m_useNs2Style)
+  if (m_useNs2Impl)
     {
       uint32_t left = GetMaxSize ().GetValue () - GetNPackets ();
       // Drop packet if number of packets exceeds fairshare or limit is reached
@@ -239,7 +239,7 @@ SfqQueueDisc::DoDequeue (void)
 {
   NS_LOG_FUNCTION (this);
 
-  if (m_useNs2Style)
+  if (m_useNs2Impl)
     {
       Ptr<SfqFlow> flow;
       Ptr<QueueDiscItem> item;
@@ -369,7 +369,7 @@ SfqQueueDisc::InitializeParams (void)
 
   // we are at initialization time. If the user has not set a quantum value,
   // set the quantum to the MTU of the device
-  if (!m_quantum && !m_useNs2Style)
+  if (!m_quantum && !m_useNs2Impl)
     {
       Ptr<NetDevice> device = GetNetDevice ();
       NS_ASSERT_MSG (device, "Device not set for the queue disc");
