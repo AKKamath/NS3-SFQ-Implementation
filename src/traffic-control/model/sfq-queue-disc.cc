@@ -191,46 +191,29 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
       flow = StaticCast<SfqFlow> (GetQueueDiscClass (m_flowsIndices[h]));
     }
 
-  if (m_useNs2Impl)
-    {
-      uint32_t left = GetMaxSize ().GetValue () - GetNPackets ();
-      // Drop packet if number of packets exceeds fairshare or limit is reached
-      if ( (flow->GetQueueDisc ()->GetNPackets () >= (left >> 1))
-           || (left < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare)
-           || (left <= 0))
-        {
-          DropBeforeEnqueue (item, OVERLIMIT_DROP);
-          return false;
-        }
-      flow->GetQueueDisc ()->Enqueue (item);
 
-      NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
-      if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
-        {
-          flow->SetStatus (SfqFlow::SFQ_IN_USE);
-          m_flowList.push_back (flow);
-        }
-      return true;
-    }
-
-  if (GetNPackets () >= GetMaxSize ().GetValue ()
-      || (GetMaxSize ().GetValue () - GetNPackets () < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare))
+  uint32_t left = GetMaxSize ().GetValue () - GetNPackets ();
+  // Drop packet if number of packets exceeds fairshare or limit is reached
+  if ( (flow->GetQueueDisc ()->GetNPackets () >= (left >> 1) && m_useNs2Impl)
+       || (left < m_flows && flow->GetQueueDisc ()->GetNPackets () > m_fairshare)
+       || (left <= 0))
     {
       DropBeforeEnqueue (item, OVERLIMIT_DROP);
       return false;
     }
 
-  if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
-    {
-      flow->SetStatus (SfqFlow::SFQ_IN_USE);
-      flow->SetAllot (m_quantum);
-      m_flowList.push_back (flow);
-    }
-
   flow->GetQueueDisc ()->Enqueue (item);
 
   NS_LOG_DEBUG ("Packet enqueued into flow " << h << "; flow index " << m_flowsIndices[h]);
-
+  if (flow->GetStatus () == SfqFlow::SFQ_EMPTY_SLOT)
+    {
+      flow->SetStatus (SfqFlow::SFQ_IN_USE);
+      if (!m_useNs2Impl)
+        {
+          flow->SetAllot (m_quantum);
+        }
+      m_flowList.push_back (flow);
+    }
   return true;
 }
 
@@ -239,10 +222,11 @@ SfqQueueDisc::DoDequeue (void)
 {
   NS_LOG_FUNCTION (this);
 
+  Ptr<SfqFlow> flow;
+  Ptr<QueueDiscItem> item;
+
   if (m_useNs2Impl)
     {
-      Ptr<SfqFlow> flow;
-      Ptr<QueueDiscItem> item;
       if (m_flowList.empty ())
         {
           NS_LOG_DEBUG ("No flow found to dequeue a packet");
@@ -263,9 +247,6 @@ SfqQueueDisc::DoDequeue (void)
         }
       return item;
     }
-
-  Ptr<SfqFlow> flow;
-  Ptr<QueueDiscItem> item;
   do
     {
       bool found = false;
@@ -382,7 +363,9 @@ SfqQueueDisc::InitializeParams (void)
       SetMaxSize (QueueSize ("40p"));
     }
   if (m_flowLimit == 0)
-    m_flowLimit = GetMaxSize ().GetValue ();
+    {
+      m_flowLimit = GetMaxSize ().GetValue ();
+    }
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
   m_queueDiscFactory.SetTypeId ("ns3::FifoQueueDisc");
   m_queueDiscFactory.Set ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, m_flowLimit)));
