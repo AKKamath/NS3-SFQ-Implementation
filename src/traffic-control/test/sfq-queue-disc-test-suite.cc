@@ -353,30 +353,30 @@ SfqQueueDiscUDPFlowsSeparation::DoRun (void)
 }
 
 /**
- * This class tests the deficit per flow
+ * This class tests the allotment per flow
  */
-class SfqQueueDiscDeficit : public TestCase
+class SfqQueueDiscAllotment : public TestCase
 {
 public:
-  SfqQueueDiscDeficit ();
-  virtual ~SfqQueueDiscDeficit ();
+  SfqQueueDiscAllotment ();
+  virtual ~SfqQueueDiscAllotment ();
 
 private:
   virtual void DoRun (void);
   void AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr);
 };
 
-SfqQueueDiscDeficit::SfqQueueDiscDeficit ()
+SfqQueueDiscAllotment::SfqQueueDiscAllotment ()
   : TestCase ("Test credits and flows status")
 {
 }
 
-SfqQueueDiscDeficit::~SfqQueueDiscDeficit ()
+SfqQueueDiscAllotment::~SfqQueueDiscAllotment ()
 {
 }
 
 void
-SfqQueueDiscDeficit::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr)
+SfqQueueDiscAllotment::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr)
 {
   Ptr<Packet> p = Create<Packet> (100);
   Address dest;
@@ -385,7 +385,7 @@ SfqQueueDiscDeficit::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Header hdr)
 }
 
 void
-SfqQueueDiscDeficit::DoRun (void)
+SfqQueueDiscAllotment::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ();
   Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
@@ -407,14 +407,14 @@ SfqQueueDiscDeficit::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 1, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the first flow queue");
   Ptr<SfqFlow> flow1 = StaticCast<SfqFlow> (queueDisc->GetQueueDiscClass (0));
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), static_cast<int32_t> (queueDisc->GetQuantum ()), "the deficit of the first flow must equal the quantum");
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), static_cast<int32_t> (queueDisc->GetQuantum ()), "the allotment of the first flow must equal the quantum");
   NS_TEST_ASSERT_MSG_EQ (flow1->GetStatus (), SfqFlow::SFQ_IN_USE, "the first flow must be in the list of queues");
   // Dequeue a packet
   queueDisc->Dequeue ();
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 0, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 0, "unexpected number of packets in the first flow queue");
-  // the deficit for the first flow becomes 90 - (100+20) = -30
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), -30, "unexpected deficit for the first flow");
+  // the allotment for the first flow becomes 90 - (100+20) = -30
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), -30, "unexpected allotment for the first flow");
 
   // Add two packets from the first flow
   AddPacket (queueDisc, hdr);
@@ -431,70 +431,70 @@ SfqQueueDiscDeficit::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the first flow queue");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the second flow queue");
   Ptr<SfqFlow> flow2 = StaticCast<SfqFlow> (queueDisc->GetQueueDiscClass (1));
-  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), static_cast<int32_t> (queueDisc->GetQuantum ()), "the deficit of the second flow must equal the quantum");
+  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), static_cast<int32_t> (queueDisc->GetQuantum ()), "the allotment of the second flow must equal the quantum");
   NS_TEST_ASSERT_MSG_EQ (flow2->GetStatus (), SfqFlow::SFQ_IN_USE, "the second flow must be in the list of queues");
 
-  // Dequeue a packet (from the second flow, as the first flow has a negative deficit)
+  // Dequeue a packet (from the second flow, as the first flow has a negative allotment)
   queueDisc->Dequeue ();
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 3, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the first flow queue");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the second flow queue");
-  // the first flow got a quantum of deficit (-30+90=60) and has been moved to the end of the list of queues
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), 60, "unexpected deficit for the first flow");
+  // the first flow got a quantum of allotment (-30+90=60) and has been moved to the end of the list of queues
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), 60, "unexpected allotment for the first flow");
   NS_TEST_ASSERT_MSG_EQ (flow1->GetStatus (), SfqFlow::SFQ_IN_USE, "the first flow must be in the list of queues");
-  // the second flow has a negative deficit (-30) and is still in the list of queues
-  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), -30, "unexpected deficit for the second flow");
+  // the second flow has a negative allotment (-30) and is still in the list of queues
+  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), -30, "unexpected allotment for the second flow");
   NS_TEST_ASSERT_MSG_EQ (flow2->GetStatus (), SfqFlow::SFQ_IN_USE, "the second flow must be in the list of queues");
 
-  // Dequeue a packet (from the first flow, as the second flow has a negative deficit)
+  // Dequeue a packet (from the first flow, as the second flow has a negative allotment)
   queueDisc->Dequeue ();
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 2, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the first flow queue");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the second flow queue");
-  // the first flow has a negative deficit (60-(100+20)= -60) and stays in the list of queues
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), -60, "unexpected deficit for the first flow");
+  // the first flow has a negative allotment (60-(100+20)= -60) and stays in the list of queues
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), -60, "unexpected allotment for the first flow");
   NS_TEST_ASSERT_MSG_EQ (flow1->GetStatus (), SfqFlow::SFQ_IN_USE, "the first flow must be in the list of queues");
-  // the second flow got a quantum of deficit (-30+90=60) and has been moved to the end of the list of queues
-  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), 60, "unexpected deficit for the second flow");
+  // the second flow got a quantum of allotment (-30+90=60) and has been moved to the end of the list of queues
+  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), 60, "unexpected allotment for the second flow");
   NS_TEST_ASSERT_MSG_EQ (flow2->GetStatus (), SfqFlow::SFQ_IN_USE, "the second flow must be in the list of queues");
 
-  // Dequeue a packet (from the second flow, as the first flow has a negative deficit)
+  // Dequeue a packet (from the second flow, as the first flow has a negative allotment)
   queueDisc->Dequeue ();
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 1, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 1, "unexpected number of packets in the first flow queue");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 0, "unexpected number of packets in the second flow queue");
-  // the first flow got a quantum of deficit (-60+90=30) and has been moved to the end of the list of queues
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), 30, "unexpected deficit for the first flow");
+  // the first flow got a quantum of allotment (-60+90=30) and has been moved to the end of the list of queues
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), 30, "unexpected allotment for the first flow");
   NS_TEST_ASSERT_MSG_EQ (flow1->GetStatus (), SfqFlow::SFQ_IN_USE, "the first flow must be in the list of queues");
-  // the second flow has a negative deficit (60-(100+20)= -60)
-  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), -60, "unexpected deficit for the second flow");
+  // the second flow has a negative allotment (60-(100+20)= -60)
+  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), -60, "unexpected allotment for the second flow");
   NS_TEST_ASSERT_MSG_EQ (flow2->GetStatus (), SfqFlow::SFQ_IN_USE, "the second flow must be in the list of queues");
 
-  // Dequeue a packet (from the first flow, as the second flow has a negative deficit)
+  // Dequeue a packet (from the first flow, as the second flow has a negative allotment)
   queueDisc->Dequeue ();
   NS_TEST_ASSERT_MSG_EQ (queueDisc->QueueDisc::GetNPackets (), 0, "unexpected number of packets in the queue disc");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 0, "unexpected number of packets in the first flow queue");
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (1)->GetQueueDisc ()->GetNPackets (), 0, "unexpected number of packets in the second flow queue");
-  // the first flow has a negative deficit (30-(100+20)= -90)
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), -90, "unexpected deficit for the first flow");
+  // the first flow has a negative allotment (30-(100+20)= -90)
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), -90, "unexpected allotment for the first flow");
   NS_TEST_ASSERT_MSG_EQ (flow1->GetStatus (), SfqFlow::SFQ_IN_USE, "the first flow must be in the list of queues");
-  // the second flow got a quantum of deficit (-60+90=30) and has been moved to the end of the list of queues
-  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), 30, "unexpected deficit for the second flow");
+  // the second flow got a quantum of allotment (-60+90=30) and has been moved to the end of the list of queues
+  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), 30, "unexpected allotment for the second flow");
   NS_TEST_ASSERT_MSG_EQ (flow2->GetStatus (), SfqFlow::SFQ_IN_USE, "the second flow must be in the list of queues");
 
   // Dequeue a packet
   queueDisc->Dequeue ();
   /*
-   * The first flow is in the list of queues but has a negative deficit, thus it gets a quantun
-   * of deficit (-90+90=0) and is moved to the end of the list of queues. Then, the second flow (which has a
-   * positive deficit) is selected, but the second flow is empty and thus it is set to empty. The first flow is
-   * reconsidered, but it has a null deficit, hence it gets another quantum of deficit (0+90=90). Then, the first
-   * flow is reconsidered again, now it has a positive deficit and hence it is selected. But, it is empty and
+   * The first flow is in the list of queues but has a negative allotment, thus it gets a quantun
+   * of allotment (-90+90=0) and is moved to the end of the list of queues. Then, the second flow (which has a
+   * positive allotment) is selected, but the second flow is empty and thus it is set to empty. The first flow is
+   * reconsidered, but it has a null allotment, hence it gets another quantum of allotment (0+90=90). Then, the first
+   * flow is reconsidered again, now it has a positive allotment and hence it is selected. But, it is empty and
    * therefore is set to empty, too.
    */
-  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), 90, "unexpected deficit for the first flow");
+  NS_TEST_ASSERT_MSG_EQ (flow1->GetAllot (), 90, "unexpected allotment for the first flow");
   NS_TEST_ASSERT_MSG_EQ (flow1->GetStatus (), SfqFlow::SFQ_EMPTY_SLOT, "the first flow must be inactive");
-  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), 30, "unexpected deficit for the second flow");
+  NS_TEST_ASSERT_MSG_EQ (flow2->GetAllot (), 30, "unexpected allotment for the second flow");
   NS_TEST_ASSERT_MSG_EQ (flow2->GetStatus (), SfqFlow::SFQ_EMPTY_SLOT, "the second flow must be inactive");
 
   Simulator::Destroy ();
@@ -582,7 +582,7 @@ void
 SfqNs2QueueDiscNoSuitableFilter::DoRun (void)
 {
   // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("4p")), "Flows", UintegerValue (2), "Ns2Style", BooleanValue (true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("4p")), "Flows", UintegerValue (2), "Ns2Impl", BooleanValue (true));
   Ptr<SfqNs2Ipv4PacketFilter> filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (filter);
 
@@ -640,7 +640,7 @@ SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit::AddPacket (Ptr<SfqQueueDisc> que
 void
 SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("12p")), "Flows", UintegerValue (4), "Ns2Style", BooleanValue (true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("12p")), "Flows", UintegerValue (4), "Ns2Impl", BooleanValue (true));
   Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
   Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -706,7 +706,7 @@ private:
 };
 
 SfqNs2QueueDiscTCPFlowsSeparation::SfqNs2QueueDiscTCPFlowsSeparation ()
-  : TestCase ("Test TCP flows separation for ns-2 style")
+  : TestCase ("Test TCP flows separation for ns-2 implementation")
 {
 }
 
@@ -727,7 +727,7 @@ SfqNs2QueueDiscTCPFlowsSeparation::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Heade
 void
 SfqNs2QueueDiscTCPFlowsSeparation::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Style", BooleanValue (true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Impl", BooleanValue (true));
   Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
   Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -795,7 +795,7 @@ private:
 };
 
 SfqNs2QueueDiscUDPFlowsSeparation::SfqNs2QueueDiscUDPFlowsSeparation ()
-  : TestCase ("Test UDP flows separation for ns-2 style")
+  : TestCase ("Test UDP flows separation for ns-2 implementation")
 {
 }
 
@@ -816,7 +816,7 @@ SfqNs2QueueDiscUDPFlowsSeparation::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Heade
 void
 SfqNs2QueueDiscUDPFlowsSeparation::DoRun (void)
 {
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Style", BooleanValue (true));
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Impl", BooleanValue (true));
   Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
   Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
   queueDisc->AddPacketFilter (ipv6Filter);
@@ -883,9 +883,9 @@ SfqQueueDiscTestSuite::SfqQueueDiscTestSuite ()
   AddTestCase (new SfqQueueDiscIPFlowsSeparationAndPacketLimit, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscTCPFlowsSeparation, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscUDPFlowsSeparation, TestCase::QUICK);
-  AddTestCase (new SfqQueueDiscDeficit, TestCase::QUICK);
+  AddTestCase (new SfqQueueDiscAllotment, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscPerturbationHashChange, TestCase::QUICK);
-  // Test cases for ns-2 style implementation of SFQ
+  // Test cases for ns-2 implementation of SFQ
   AddTestCase (new SfqNs2QueueDiscNoSuitableFilter, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscTCPFlowsSeparation, TestCase::QUICK);
