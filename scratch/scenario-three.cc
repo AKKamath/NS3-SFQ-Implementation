@@ -123,20 +123,20 @@ BuildAppsTest ()
   clientHelper2.SetAttribute ("PacketSize", UintegerValue (1000));
   clientHelper2.SetAttribute ("DataRate", DataRateValue (DataRate ("800kb/s")));
 
-  // Two connections with 40 byte packets
+  // Two connections with 40 byte packets, with 5 second delay between packets
   // Connection three
   OnOffHelper clientHelper3 ("ns3::TcpSocketFactory", Address ());
   clientHelper3.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   clientHelper3.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   clientHelper3.SetAttribute ("PacketSize", UintegerValue (40));
-  clientHelper3.SetAttribute ("DataRate", DataRateValue (DataRate ("800kb/s")));
+  clientHelper3.SetAttribute ("DataRate", DataRateValue (DataRate ("8B/s")));
 
   // Connection four
   OnOffHelper clientHelper4 ("ns3::TcpSocketFactory", Address ());
   clientHelper4.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   clientHelper4.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   clientHelper4.SetAttribute ("PacketSize", UintegerValue (40));
-  clientHelper4.SetAttribute ("DataRate", DataRateValue (DataRate ("800kb/s")));
+  clientHelper4.SetAttribute ("DataRate", DataRateValue (DataRate ("8B/s")));
 
   ApplicationContainer clientApps1;
   AddressValue remoteAddress (InetSocketAddress (i4i5.GetAddress (1), port));
@@ -167,7 +167,7 @@ BuildAppsTest ()
 int
 main (int argc, char *argv[])
 {
-  LogComponentEnable ("SfqQueueDisc", LOG_LEVEL_INFO);
+  LogComponentEnable ("SfqQueueDisc", LOG_LEVEL_DEBUG);
 
   std::string sfqLinkDataRate = "56kbps";
   std::string sfqLinkDelay = "20ms";
@@ -214,14 +214,16 @@ main (int argc, char *argv[])
 
   Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::TcpNewReno"));
   // 42 = headers size
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000 - 42));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (1));
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000));
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (false));
 
   // SFQ params
   NS_LOG_INFO ("Set SFQ params");
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (10));
   Config::SetDefault ("ns3::SfqQueueDisc::MaxSize", StringValue ("40p"));
+
+  
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -255,19 +257,19 @@ main (int argc, char *argv[])
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("3ms"));
   devn1n4 = p2p.Install (n1n4);
   tchPfifo.Install (devn1n4);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("5s"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("4ms"));
   devn2n4 = p2p.Install (n2n4);
   tchPfifo.Install (devn2n4);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("5s"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("5ms"));
   devn3n4 = p2p.Install (n3n4);
   tchPfifo.Install (devn3n4);
 
@@ -309,11 +311,11 @@ main (int argc, char *argv[])
       ptp.EnablePcapAll (stmp.str ().c_str ());
     }
 
+  FlowMonitorHelper flowmonHelper;
   Ptr<FlowMonitor> flowmon;
   if (flowMonitor)
     {
-      FlowMonitorHelper flowmonHelper;
-      flowmon = flowmonHelper.InstallAll ();
+      flowmon = flowmonHelper.Install (c);
     }
 
   if (writeForPlot)
@@ -343,8 +345,6 @@ main (int argc, char *argv[])
   if (printSfqStats)
     {
       std::cout << "*** SFQ stats from Node 4 queue ***" << std::endl;
-      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNFORCED_DROP)
-      //        << " drops due to prob mark" << std::endl;
       std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::OVERLIMIT_DROP)
                 << " drops due to queue limits" << std::endl;
     }

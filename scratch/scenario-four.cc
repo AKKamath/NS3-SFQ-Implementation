@@ -173,20 +173,20 @@ BuildAppsTest ()
   clientHelper6.SetAttribute ("PacketSize", UintegerValue (1000));
   clientHelper6.SetAttribute ("DataRate", DataRateValue (DataRate ("800kb/s")));
 
-  // Two connections with 40 byte packets
+  // Two connections with 40 byte packets, with 5 second delay between packets
   // Connection seven
   OnOffHelper clientHelper7 ("ns3::TcpSocketFactory", Address ());
   clientHelper7.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   clientHelper7.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   clientHelper7.SetAttribute ("PacketSize", UintegerValue (40));
-  clientHelper7.SetAttribute ("DataRate", DataRateValue (DataRate ("800kb/s")));
+  clientHelper7.SetAttribute ("DataRate", DataRateValue (DataRate ("8B/s")));
 
   // Connection eight
   OnOffHelper clientHelper8 ("ns3::TcpSocketFactory", Address ());
   clientHelper8.SetAttribute ("OnTime", StringValue ("ns3::ConstantRandomVariable[Constant=1]"));
   clientHelper8.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   clientHelper8.SetAttribute ("PacketSize", UintegerValue (40));
-  clientHelper8.SetAttribute ("DataRate", DataRateValue (DataRate ("800kb/s")));
+  clientHelper8.SetAttribute ("DataRate", DataRateValue (DataRate ("8B/s")));
 
   AddressValue remoteAddress (InetSocketAddress (i8i9.GetAddress (1), port));
   ApplicationContainer clientApps1;
@@ -241,7 +241,7 @@ BuildAppsTest ()
 int
 main (int argc, char *argv[])
 {
-  LogComponentEnable ("SfqQueueDisc", LOG_LEVEL_INFO);
+  LogComponentEnable ("SfqQueueDisc", LOG_LEVEL_DEBUG);
 
   std::string sfqLinkDataRate = "56kbps";
   std::string sfqLinkDelay = "20ms";
@@ -296,7 +296,7 @@ main (int argc, char *argv[])
 
   Config::SetDefault ("ns3::TcpL4Protocol::SocketType", StringValue ("ns3::TcpNewReno"));
   // 42 = headers size
-  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000 - 42));
+  Config::SetDefault ("ns3::TcpSocket::SegmentSize", UintegerValue (1000));
   Config::SetDefault ("ns3::TcpSocket::DelAckCount", UintegerValue (1));
   GlobalValue::Bind ("ChecksumEnabled", BooleanValue (false));
 
@@ -341,43 +341,43 @@ main (int argc, char *argv[])
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("3ms"));
   devn1n8 = p2p.Install (n1n8);
   tchPfifo.Install (devn1n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("4ms"));
   devn2n8 = p2p.Install (n2n8);
   tchPfifo.Install (devn2n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("5ms"));
   devn3n8 = p2p.Install (n3n8);
   tchPfifo.Install (devn3n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("6ms"));
   devn4n8 = p2p.Install (n4n8);
   tchPfifo.Install (devn4n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("7ms"));
   devn5n8 = p2p.Install (n5n8);
   tchPfifo.Install (devn5n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("5s"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("8ms"));
   devn6n8 = p2p.Install (n6n8);
   tchPfifo.Install (devn6n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("5s"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("9ms"));
   devn7n8 = p2p.Install (n7n8);
   tchPfifo.Install (devn7n8);
 
@@ -431,10 +431,10 @@ main (int argc, char *argv[])
       ptp.EnablePcapAll (stmp.str ().c_str ());
     }
 
+  FlowMonitorHelper flowmonHelper;
   Ptr<FlowMonitor> flowmon;
   if (flowMonitor)
     {
-      FlowMonitorHelper flowmonHelper;
       flowmon = flowmonHelper.InstallAll ();
     }
 
@@ -465,8 +465,6 @@ main (int argc, char *argv[])
   if (printSfqStats)
     {
       std::cout << "*** SFQ stats from Node 8 queue ***" << std::endl;
-      //std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::UNFORCED_DROP)
-      //        << " drops due to prob mark" << std::endl;
       std::cout << "\t " << st.GetNDroppedPackets (SfqQueueDisc::OVERLIMIT_DROP)
                 << " drops due to queue limits" << std::endl;
     }
