@@ -341,43 +341,43 @@ main (int argc, char *argv[])
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("3ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn1n8 = p2p.Install (n1n8);
   tchPfifo.Install (devn1n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("4ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn2n8 = p2p.Install (n2n8);
   tchPfifo.Install (devn2n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("5ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn3n8 = p2p.Install (n3n8);
   tchPfifo.Install (devn3n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("6ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn4n8 = p2p.Install (n4n8);
   tchPfifo.Install (devn4n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("7ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn5n8 = p2p.Install (n5n8);
   tchPfifo.Install (devn5n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("8ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn6n8 = p2p.Install (n6n8);
   tchPfifo.Install (devn6n8);
 
   p2p.SetQueue ("ns3::DropTailQueue");
   p2p.SetDeviceAttribute ("DataRate", StringValue ("800kbps"));
-  p2p.SetChannelAttribute ("Delay", StringValue ("9ms"));
+  p2p.SetChannelAttribute ("Delay", StringValue ("2ms"));
   devn7n8 = p2p.Install (n7n8);
   tchPfifo.Install (devn7n8);
 
