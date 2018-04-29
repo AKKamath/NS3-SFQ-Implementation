@@ -55,6 +55,8 @@ double sink_start_time;
 double sink_stop_time;
 double client_start_time;
 double client_stop_time;
+double monitor_start_time;
+double monitor_stop_time;
 
 NodeContainer n0n4;
 NodeContainer n1n4;
@@ -181,10 +183,12 @@ main (int argc, char *argv[])
 
   global_start_time = 0.0;
   sink_start_time = global_start_time;
-  client_start_time = global_start_time + 1;
-  global_stop_time = 2002;
+  client_start_time = global_start_time + 1.0;
+  global_stop_time = 2002.0;
   sink_stop_time = global_stop_time + 1.0;
   client_stop_time = global_stop_time - 1.0;
+  monitor_start_time = 1501.0;
+  monitor_stop_time = client_stop_time;
 
   // Configuration and command line parameter parsing
   // Will only save in the directory if enable opts below
@@ -222,8 +226,7 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Set SFQ params");
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (10));
   Config::SetDefault ("ns3::SfqQueueDisc::MaxSize", StringValue ("40p"));
-
-  
+  Config::SetDefault ("ns3::SfqIpv4PacketFilter::PerturbationTime", TimeValue (Seconds (25)));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -316,6 +319,8 @@ main (int argc, char *argv[])
   if (flowMonitor)
     {
       flowmon = flowmonHelper.Install (c);
+      flowmon->Start (Seconds (monitor_start_time));
+      flowmon->Stop (Seconds (monitor_stop_time));
     }
 
   if (writeForPlot)
