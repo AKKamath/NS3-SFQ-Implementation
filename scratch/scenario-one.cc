@@ -32,7 +32,6 @@ int main (int argc, char *argv[])
   bool outputToFile = true;
   std::string fileName = "scenario-one.txt";
   std::ofstream file (fileName.c_str ());
-  Ptr<SfqIpv4PacketFilter> filter = CreateObject<SfqIpv4PacketFilter> ();
   
   Ipv4Header hdr;
   hdr.SetPayloadSize (100);
@@ -52,7 +51,7 @@ int main (int argc, char *argv[])
             hdr.SetDestination (Ipv4Address (i));
             Ptr<Ipv4QueueDiscItem> item = Create<Ipv4QueueDiscItem> (p, dest, 0, hdr);
             // Add to corresponding queue
-            ++queue[filter->Classify (item) % queueSize];            
+            ++queue[item->Hash (0) % queueSize];            
         }
       double deviation = 0;
       for (uint32_t i = 0; i < queueSize; ++i)

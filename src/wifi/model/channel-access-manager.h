@@ -18,41 +18,40 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef DCF_MANAGER_H
-#define DCF_MANAGER_H
+#ifndef CHANNEL_ACCESS_MANAGER_H
+#define CHANNEL_ACCESS_MANAGER_H
 
-#include "mac-low.h"
+#include <vector>
 #include "ns3/event-id.h"
 #include "ns3/nstime.h"
-#include <vector>
 
 namespace ns3 {
 
 class WifiPhy;
 class PhyListener;
-class DcfState;
+class Txop;
 class MacLow;
 
 /**
- * \brief Manage a set of ns3::DcfState
+ * \brief Manage a set of ns3::Txop
  * \ingroup wifi
  *
- * Handle a set of independent ns3::DcfState, each of which represents
- * a single DCF within a MAC stack. Each ns3::DcfState has a priority
+ * Handle a set of independent ns3::Txop, each of which represents
+ * a single DCF within a MAC stack. Each ns3::Txop has a priority
  * implicitely associated with it (the priority is determined when the
- * ns3::DcfState is added to the DcfManager: the first DcfState to be
+ * ns3::Txop is added to the ChannelAccessManager: the first Txop to be
  * added gets the highest priority, the second, the second highest
  * priority, and so on.) which is used to handle "internal" collisions.
- * i.e., when two local DcfState are expected to get access to the
- * medium at the same time, the highest priority local DcfState wins
- * access to the medium and the other DcfState suffers a "internal"
+ * i.e., when two local Txop are expected to get access to the
+ * medium at the same time, the highest priority local Txop wins
+ * access to the medium and the other Txop suffers a "internal"
  * collision.
  */
-class DcfManager : public Object
+class ChannelAccessManager : public Object
 {
 public:
-  DcfManager ();
-  virtual ~DcfManager ();
+  ChannelAccessManager ();
+  virtual ~ChannelAccessManager ();
 
   /**
    * Set up listener for Phy events.
@@ -101,26 +100,27 @@ public:
   Time GetEifsNoDifs () const;
 
   /**
-   * \param dcf a new DcfState.
+   * \param dcf a new Txop.
    *
-   * The DcfManager does not take ownership of this pointer so, the callee
-   * must make sure that the DcfState pointer will stay valid as long
-   * as the DcfManager is valid. Note that the order in which DcfState
-   * objects are added to a DcfManager matters: the first DcfState added
-   * has the highest priority, the second DcfState added, has the second
+   * The ChannelAccessManager does not take ownership of this pointer so, the callee
+   * must make sure that the Txop pointer will stay valid as long
+   * as the ChannelAccessManager is valid. Note that the order in which Txop
+   * objects are added to a ChannelAccessManager matters: the first Txop added
+   * has the highest priority, the second Txop added, has the second
    * highest priority, etc.
    */
-  void Add (Ptr<DcfState> dcf);
+  void Add (Ptr<Txop> dcf);
 
   /**
-   * \param state a DcfState
+   * \param state a Txop
+   * \param isCfPeriod flag whether it is called during the CF period
    *
-   * Notify the DcfManager that a specific DcfState needs access to the
-   * medium. The DcfManager is then responsible for starting an access
-   * timer and, invoking DcfState::DoNotifyAccessGranted when the access
+   * Notify the ChannelAccessManager that a specific Txop needs access to the
+   * medium. The ChannelAccessManager is then responsible for starting an access
+   * timer and, invoking Txop::DoNotifyAccessGranted when the access
    * is granted if it ever gets granted.
    */
-  void RequestAccess (Ptr<DcfState> state);
+  void RequestAccess (Ptr<Txop> state, bool isCfPeriod = false);
 
   /**
    * \param duration expected duration of reception
@@ -157,7 +157,7 @@ public:
    * \param duration expected duration of channel switching period
    *
    * Notify the DCF that a channel switching period has just started.
-   * During switching state, new packets can be enqueued in DcaTxop/EdcaTxop
+   * During switching state, new packets can be enqueued in Txop/QosTxop
    * but they won't access to the medium until the end of the channel switching.
    */
   void NotifySwitchingStartNow (Time duration);
@@ -210,13 +210,24 @@ public:
    */
   void NotifyCtsTimeoutResetNow ();
 
+  /**
+   * Check if the device is busy sending or receiving,
+   * or NAV or CCA busy.
+   *
+   * \return true if the device is busy,
+   *         false otherwise
+   */
+  bool IsBusy (void) const;
+
+
 protected:
   // Inherited from ns3::Object
   void DoDispose (void);
 
+
 private:
   /**
-   * Update backoff slots for all DcfStates.
+   * Update backoff slots for all Txops.
    */
   void UpdateBackoff (void);
   /**
@@ -228,27 +239,6 @@ private:
    * \return the most recent time
    */
   Time MostRecent (Time a, Time b) const;
-  /**
-   * Return the most recent time.
-   *
-   * \param a
-   * \param b
-   * \param c
-   *
-   * \return the most recent time
-   */
-  Time MostRecent (Time a, Time b, Time c) const;
-  /**
-   * Return the most recent time.
-   *
-   * \param a
-   * \param b
-   * \param c
-   * \param d
-   *
-   * \return the most recent time
-   */
-  Time MostRecent (Time a, Time b, Time c, Time d) const;
   /**
    * Return the most recent time.
    *
@@ -280,27 +270,29 @@ private:
    * Access will never be granted to the medium _before_
    * the time returned by this method.
    *
+   * \param ignoreNav flag whether NAV should be ignored
+   *
    * \returns the absolute time at which access could start to be granted
    */
-  Time GetAccessGrantStart (void) const;
+  Time GetAccessGrantStart (bool ignoreNav = false) const;
   /**
    * Return the time when the backoff procedure
-   * started for the given DcfState.
+   * started for the given Txop.
    *
    * \param state
    *
    * \return the time when the backoff procedure started
    */
-  Time GetBackoffStartFor (Ptr<DcfState> state);
+  Time GetBackoffStartFor (Ptr<Txop> state);
   /**
    * Return the time when the backoff procedure
-   * ended (or will ended) for the given DcfState.
+   * ended (or will ended) for the given Txop.
    *
    * \param state
    *
    * \return the time when the backoff procedure ended (or will ended)
    */
-  Time GetBackoffEndFor (Ptr<DcfState> state);
+  Time GetBackoffEndFor (Ptr<Txop> state);
 
   void DoRestartAccessTimeoutIfNeeded (void);
 
@@ -314,26 +306,22 @@ private:
    */
   void DoGrantAccess (void);
   /**
-   * Check if the device is busy sending or receiving,
-   * or NAV or CCA busy.
-   *
-   * \return true if the device is busy,
-   *         false otherwise
-   */
-  bool IsBusy (void) const;
-  /**
    * Check if the device is between frames (in DIFS or AIFS interval)
    *
    * \param state the state to check
    * \return true if the device is within AIFS,
    *         false otherwise
    */
-  bool IsWithinAifs (Ptr<DcfState> state) const;
+  bool IsWithinAifs (Ptr<Txop> state) const;
+  /**
+   * Grant access to PCF
+   */
+  void GrantPcfAccess (Ptr<Txop> state);
 
   /**
-   * typedef for a vector of DcfStates
+   * typedef for a vector of Txops
    */
-  typedef std::vector<Ptr<DcfState> > States;
+  typedef std::vector<Ptr<Txop> > States;
 
   States m_states;              //!< the DCF states
   Time m_lastAckTimeoutEnd;     //!< the last ACK timeout end time
@@ -355,11 +343,11 @@ private:
   bool m_off;                   //!< flag whether it is in off state
   Time m_eifsNoDifs;            //!< EIFS no DIFS time
   EventId m_accessTimeout;      //!< the access timeout ID
-  uint32_t m_slotTimeUs;        //!< the slot time in microseconds
+  Time m_slot;                  //!< the slot time
   Time m_sifs;                  //!< the SIFS time
   PhyListener* m_phyListener;   //!< the phy listener
 };
 
 } //namespace ns3
 
-#endif /* DCF_MANAGER_H */
+#endif /* CHANNEL_ACCESS_MANAGER_H */

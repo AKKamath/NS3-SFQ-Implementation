@@ -25,9 +25,9 @@
 #include "ns3/string.h"
 #include "sfq-queue-disc.h"
 #include "ns3/queue.h"
-#include "ns3/ipv4-packet-filter.h"
-#include "ns3/ipv6-packet-filter.h"
+#include "ns3/random-variable-stream.h"
 #include "ns3/net-device-queue-interface.h"
+#include "ns3/simulator.h"
 namespace ns3 {
 
 NS_LOG_COMPONENT_DEFINE ("SfqQueueDisc");
@@ -99,14 +99,6 @@ TypeId SfqQueueDisc::GetTypeId (void)
     .SetParent<QueueDisc> ()
     .SetGroupName ("TrafficControl")
     .AddConstructor<SfqQueueDisc> ()
-    .AddAttribute ("PacketLimit",
-                   "The hard limit on the real queue size, measured in packets",
-                   UintegerValue (10 * 1024),
-                   MakeUintegerAccessor (&SfqQueueDisc::SetLimit,
-                                         &SfqQueueDisc::GetLimit),
-                   MakeUintegerChecker<uint32_t> (),
-                   TypeId::DEPRECATED,
-                   "Use the MaxSize attribute instead")
     .AddAttribute ("MaxSize",
                    "The maximum number of packets accepted by this queue disc",
                    QueueSizeValue (QueueSize ("10240p")),
@@ -128,6 +120,11 @@ TypeId SfqQueueDisc::GetTypeId (void)
                    BooleanValue (false),
                    MakeBooleanAccessor (&SfqQueueDisc::m_useNs2Impl),
                    MakeBooleanChecker ())
+    .AddAttribute ("PerturbationTime",
+                   "The time duration after which salt used as an additional input to the hash function is changed",
+                   TimeValue (MilliSeconds (100)),
+                   MakeTimeAccessor (&SfqQueueDisc::m_perturbTime),
+                   MakeTimeChecker ())
   ;
   return tid;
 }
@@ -164,15 +161,22 @@ SfqQueueDisc::DoEnqueue (Ptr<QueueDiscItem> item)
   int32_t ret = Classify (item); //classify returns a hash function based on the packet filters
   uint32_t h;
 
-  if (ret == PacketFilter::PF_NO_MATCH)
+  if (GetNPacketFilters () == 0)
     {
-      NS_LOG_ERROR ("No filter has been able to classify this packet, place it in seperate flow.");
-      h = m_flows; // place all unfiltered packets into a seperate flow queue
+      h = item->Hash (m_perturbation) % m_flows;
     }
   else
-    {
-      h = ret % m_flows;
-    }
+  {
+    if (ret != PacketFilter::PF_NO_MATCH)
+      {
+        h = ret % m_flows;
+      }
+    else
+      {
+        NS_LOG_ERROR ("No filter has been able to classify this packet, place it in seperate flow.");
+        h = m_flows; // place all unfiltered packets into a seperate flow queue
+      }
+  }
 
   Ptr<SfqFlow> flow;
   if (m_flowsIndices.find (h) == m_flowsIndices.end ())
@@ -296,28 +300,6 @@ SfqQueueDisc::DoDequeue (void)
   return item;
 }
 
-Ptr<const QueueDiscItem>
-SfqQueueDisc::DoPeek (void)
-{
-  NS_LOG_FUNCTION (this);
-
-  return PeekDequeued ();
-}
-
-void
-SfqQueueDisc::SetLimit (uint32_t limit)
-{
-  NS_LOG_FUNCTION (this << limit);
-  SetMaxSize (QueueSize (QueueSizeUnit::PACKETS, limit));
-}
-
-uint32_t
-SfqQueueDisc::GetLimit (void) const
-{
-  NS_LOG_FUNCTION (this);
-  return GetMaxSize ().GetValue ();
-}
-
 bool
 SfqQueueDisc::CheckConfig (void)
 {
@@ -328,18 +310,11 @@ SfqQueueDisc::CheckConfig (void)
       return false;
     }
 
-  if (GetNPacketFilters () == 0)
-    {
-      NS_LOG_ERROR ("SfqQueueDisc needs at least a packet filter");
-      return false;
-    }
-
   if (GetNInternalQueues () > 0)
     {
       NS_LOG_ERROR ("SfqQueueDisc cannot have internal queues");
       return false;
     }
-
   return true;
 }
 
@@ -349,7 +324,7 @@ SfqQueueDisc::InitializeParams (void)
   NS_LOG_FUNCTION (this);
 
   // we are at initialization time. If the user has not set a quantum value,
-  // set the quantum to the MTU of the device
+  // set the quantum to the MTU of the device, only applicable for ns-3 version
   if (!m_quantum && !m_useNs2Impl)
     {
       Ptr<NetDevice> device = GetNetDevice ();
@@ -357,6 +332,7 @@ SfqQueueDisc::InitializeParams (void)
       m_quantum = device->GetMtu ();
       NS_LOG_DEBUG ("Setting the quantum to the MTU of the device: " << m_quantum);
     }
+  // Ensure that flows and max size have some value set
   if (m_flows == 0 || GetMaxSize ().GetValue () == 0)
     {
       m_flows = 16;
@@ -366,10 +342,33 @@ SfqQueueDisc::InitializeParams (void)
     {
       m_flowLimit = GetMaxSize ().GetValue ();
     }
+  // ns-2 version has no perturbation feature, so turn it off
+  if (m_useNs2Impl)
+  {
+    m_perturbation = 0;
+    m_perturbTime = Seconds(0);
+  }
   m_flowFactory.SetTypeId ("ns3::SfqFlow");
   m_queueDiscFactory.SetTypeId ("ns3::FifoQueueDisc");
   m_queueDiscFactory.Set ("MaxSize", QueueSizeValue (QueueSize (QueueSizeUnit::PACKETS, m_flowLimit)));
   m_fairshare = GetMaxSize ().GetValue () / m_flows;
+  
+  // Setup perturbation event
+  rand = CreateObject<UniformRandomVariable> ();
+  rand->SetAttribute ("Min", DoubleValue (0));
+  rand->SetAttribute ("Max", DoubleValue (UINT32_MAX));
+  if (m_perturbTime != 0)
+    {
+      Simulator::Schedule (m_perturbTime, &SfqQueueDisc::PerturbHash, this);
+    }
+}
+
+void
+SfqQueueDisc::PerturbHash (void)
+{
+  m_perturbation = rand->GetInteger ();
+  NS_LOG_DEBUG ("Set new perturbation value to " << m_perturbation);
+  Simulator::Schedule (m_perturbTime, &SfqQueueDisc::PerturbHash, this);
 }
 
 } // namespace ns3

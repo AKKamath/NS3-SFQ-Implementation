@@ -33,9 +33,54 @@
 #include "ns3/tcp-header.h"
 #include "ns3/udp-header.h"
 #include "ns3/uinteger.h"
+#include "ns3/string.h"
 #include "ns3/pointer.h"
 
 using namespace ns3;
+
+/**
+ * Simple test packet filter able to classify IPv4 packets
+ *
+ */
+class Ipv4TestPacketFilter : public Ipv4PacketFilter {
+public:
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
+  static TypeId GetTypeId (void);
+
+  Ipv4TestPacketFilter ();
+  virtual ~Ipv4TestPacketFilter ();
+
+private:
+  virtual int32_t DoClassify (Ptr<QueueDiscItem> item) const;
+};
+
+TypeId
+Ipv4TestPacketFilter::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::Ipv4TestPacketFilter")
+    .SetParent<Ipv4PacketFilter> ()
+    .SetGroupName ("Internet")
+    .AddConstructor<Ipv4TestPacketFilter> ()
+  ;
+  return tid;
+}
+
+Ipv4TestPacketFilter::Ipv4TestPacketFilter ()
+{
+}
+
+Ipv4TestPacketFilter::~Ipv4TestPacketFilter ()
+{
+}
+
+int32_t
+Ipv4TestPacketFilter::DoClassify (Ptr<QueueDiscItem> item) const
+{
+  return 0;
+}
 
 /**
  * This class tests packets for which there is no suitable filter
@@ -62,9 +107,9 @@ SfqQueueDiscNoSuitableFilter::~SfqQueueDiscNoSuitableFilter ()
 void
 SfqQueueDiscNoSuitableFilter::DoRun (void)
 {
-  // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("4p")), "Flows", UintegerValue (2));
-  Ptr<SfqIpv4PacketFilter> filter = CreateObject<SfqIpv4PacketFilter> ();
+  // Packets that cannot be classified by the available filters should be put in seperate queue
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", StringValue ("4p"));
+  Ptr<Ipv4TestPacketFilter> filter = CreateObject<Ipv4TestPacketFilter> ();
   queueDisc->AddPacketFilter (filter);
 
   queueDisc->SetQuantum (1500);
@@ -77,12 +122,12 @@ SfqQueueDiscNoSuitableFilter::DoRun (void)
   Address dest;
   item = Create<Ipv6QueueDiscItem> (p, dest, 0, ipv6Header);
   queueDisc->Enqueue (item);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "One flow queue should have been created");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "one flow queue should have been created");
 
   p = Create<Packet> (reinterpret_cast<const uint8_t*> ("hello, world"), 12);
   item = Create<Ipv6QueueDiscItem> (p, dest, 0, ipv6Header);
   queueDisc->Enqueue (item);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "One flow queue should have been created");
+  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "one flow queue should have been created");
 
   Simulator::Destroy ();
 }
@@ -123,10 +168,6 @@ void
 SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("8p")), "Flows", UintegerValue (4));
-  Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
-  Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
 
   queueDisc->SetQuantum (1500);
   queueDisc->Initialize ();
@@ -149,7 +190,6 @@ SfqQueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the flow queue");
 
   // Add three packets to the second flow
-  hdr.SetSource (Ipv4Address ("10.10.1.2"));
   hdr.SetDestination (Ipv4Address ("10.10.1.7"));
   AddPacket (queueDisc, hdr);
   AddPacket (queueDisc, hdr);
@@ -209,10 +249,6 @@ void
 SfqQueueDiscTCPFlowsSeparation::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObject<SfqQueueDisc> ();
-  Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
-  Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
 
   queueDisc->SetQuantum (1500);
   queueDisc->Initialize ();
@@ -299,10 +335,6 @@ void
 SfqQueueDiscUDPFlowsSeparation::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObject<SfqQueueDisc> ();
-  Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
-  Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
 
   queueDisc->SetQuantum (1500);
   queueDisc->Initialize ();
@@ -388,10 +420,6 @@ void
 SfqQueueDiscAllotment::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ();
-  Ptr<SfqIpv6PacketFilter> ipv6Filter = CreateObject<SfqIpv6PacketFilter> ();
-  Ptr<SfqIpv4PacketFilter> ipv4Filter = CreateObject<SfqIpv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
 
   queueDisc->SetQuantum (90);
   queueDisc->Initialize ();
@@ -536,10 +564,8 @@ SfqQueueDiscPerturbationHashChange::AddPacket (Ptr<SfqQueueDisc> queue, Ipv4Head
 void
 SfqQueueDiscPerturbationHashChange::DoRun (void)
 {
-  // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObject<SfqQueueDisc> ();
-  Ptr<SfqIpv4PacketFilter> filter = CreateObjectWithAttributes<SfqIpv4PacketFilter> ("PerturbationTime", TimeValue (MilliSeconds (100)));
-  queueDisc->AddPacketFilter (filter);
+  // Similar packets enqueued after a hash perturbation should be enqueued in different flows
+  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("PerturbationTime", TimeValue (MilliSeconds (100)));
 
   queueDisc->SetQuantum (1500);
   queueDisc->Initialize ();
@@ -554,55 +580,6 @@ SfqQueueDiscPerturbationHashChange::DoRun (void)
   Simulator::Schedule (MilliSeconds (150), &SfqQueueDiscPerturbationHashChange::AddPacket, this, queueDisc, ipv4Header);
   Simulator::Stop (MilliSeconds (155));
   Simulator::Run ();
-}
-
-/**
- * This class tests packets for which there is no suitable filter
- */
-class SfqNs2QueueDiscNoSuitableFilter : public TestCase
-{
-public:
-  SfqNs2QueueDiscNoSuitableFilter ();
-  virtual ~SfqNs2QueueDiscNoSuitableFilter ();
-
-private:
-  virtual void DoRun (void);
-};
-
-SfqNs2QueueDiscNoSuitableFilter::SfqNs2QueueDiscNoSuitableFilter ()
-  : TestCase ("Test packets that are not classified by any filter for ns-2 implementation")
-{
-}
-
-SfqNs2QueueDiscNoSuitableFilter::~SfqNs2QueueDiscNoSuitableFilter ()
-{
-}
-
-void
-SfqNs2QueueDiscNoSuitableFilter::DoRun (void)
-{
-  // Packets that cannot be classified by the available filters should be placed into a seperate flow queue
-  Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("4p")), "Flows", UintegerValue (2), "Ns2Impl", BooleanValue (true));
-  Ptr<SfqNs2Ipv4PacketFilter> filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
-  queueDisc->AddPacketFilter (filter);
-
-  queueDisc->Initialize ();
-
-  Ptr<Packet> p;
-  p = Create<Packet> ();
-  Ptr<Ipv6QueueDiscItem> item;
-  Ipv6Header ipv6Header;
-  Address dest;
-  item = Create<Ipv6QueueDiscItem> (p, dest, 0, ipv6Header);
-  queueDisc->Enqueue (item);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "One flow queue should have been created");
-
-  p = Create<Packet> (reinterpret_cast<const uint8_t*> ("hello, world"), 12);
-  item = Create<Ipv6QueueDiscItem> (p, dest, 0, ipv6Header);
-  queueDisc->Enqueue (item);
-  NS_TEST_ASSERT_MSG_EQ (queueDisc->GetNQueueDiscClasses (), 1, "One flow queue should have been created");
-
-  Simulator::Destroy ();
 }
 
 /**
@@ -641,10 +618,6 @@ void
 SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("MaxSize", QueueSizeValue (QueueSize ("12p")), "Flows", UintegerValue (4), "Ns2Impl", BooleanValue (true));
-  Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
-  Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
 
   queueDisc->Initialize ();
 
@@ -666,7 +639,6 @@ SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit::DoRun (void)
   NS_TEST_ASSERT_MSG_EQ (queueDisc->GetQueueDiscClass (0)->GetQueueDisc ()->GetNPackets (), 2, "unexpected number of packets in the flow queue");
 
   // Add three packets to the second flow
-  hdr.SetSource (Ipv4Address ("10.10.1.2"));
   hdr.SetDestination (Ipv4Address ("10.10.1.7"));
   AddPacket (queueDisc, hdr);
   AddPacket (queueDisc, hdr);
@@ -728,11 +700,6 @@ void
 SfqNs2QueueDiscTCPFlowsSeparation::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Impl", BooleanValue (true));
-  Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
-  Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
-
   queueDisc->Initialize ();
 
   Ipv4Header hdr;
@@ -817,10 +784,6 @@ void
 SfqNs2QueueDiscUDPFlowsSeparation::DoRun (void)
 {
   Ptr<SfqQueueDisc> queueDisc = CreateObjectWithAttributes<SfqQueueDisc> ("Ns2Impl", BooleanValue (true));
-  Ptr<SfqNs2Ipv6PacketFilter> ipv6Filter = CreateObject<SfqNs2Ipv6PacketFilter> ();
-  Ptr<SfqNs2Ipv4PacketFilter> ipv4Filter = CreateObject<SfqNs2Ipv4PacketFilter> ();
-  queueDisc->AddPacketFilter (ipv6Filter);
-  queueDisc->AddPacketFilter (ipv4Filter);
 
   queueDisc->Initialize ();
 
@@ -886,7 +849,6 @@ SfqQueueDiscTestSuite::SfqQueueDiscTestSuite ()
   AddTestCase (new SfqQueueDiscAllotment, TestCase::QUICK);
   AddTestCase (new SfqQueueDiscPerturbationHashChange, TestCase::QUICK);
   // Test cases for ns-2 implementation of SFQ
-  AddTestCase (new SfqNs2QueueDiscNoSuitableFilter, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscIPFlowsSeparationAndPacketLimit, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscTCPFlowsSeparation, TestCase::QUICK);
   AddTestCase (new SfqNs2QueueDiscUDPFlowsSeparation, TestCase::QUICK);

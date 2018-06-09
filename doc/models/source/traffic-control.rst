@@ -7,6 +7,8 @@ Traffic Control Layer
    queue-discs
    fifo
    pfifo-fast
+   prio
+   sfq
    tbf
    red
    codel

@@ -18,10 +18,11 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "mac-rx-middle.h"
-#include "wifi-mac-header.h"
 #include "ns3/log.h"
 #include "ns3/sequence-number.h"
+#include "ns3/packet.h"
+#include "mac-rx-middle.h"
+#include "wifi-mac-header.h"
 
 namespace ns3 {
 
@@ -299,6 +300,10 @@ MacRxMiddle::Receive (Ptr<Packet> packet, const WifiMacHeader *hdr)
 {
   NS_LOG_FUNCTION (packet << hdr);
   NS_ASSERT (hdr->IsData () || hdr->IsMgt ());
+  if (!m_pcfCallback.IsNull ())
+    {
+      m_pcfCallback ();
+    }
   OriginatorRxStatus *originator = Lookup (hdr);
   /**
    * The check below is really uneeded because it can fail in a lot of
@@ -335,6 +340,12 @@ MacRxMiddle::Receive (Ptr<Packet> packet, const WifiMacHeader *hdr)
       originator->SetSequenceControl (hdr->GetSequenceControl ());
     }
   m_callback (agregate, hdr);
+}
+
+void
+MacRxMiddle::SetPcfCallback (Callback<void> callback)
+{
+  m_pcfCallback = callback;
 }
 
 } //namespace ns3

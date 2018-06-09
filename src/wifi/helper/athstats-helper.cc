@@ -21,6 +21,11 @@
 #include "ns3/log.h"
 #include "ns3/simulator.h"
 #include "ns3/config.h"
+#include "ns3/wifi-mode.h"
+#include "ns3/wifi-preamble.h"
+#include "ns3/wifi-phy-state.h"
+#include "ns3/net-device-container.h"
+#include "ns3/node-container.h"
 #include "athstats-helper.h"
 #include <iomanip>
 #include <fstream>
@@ -85,7 +90,7 @@ AthstatsHelper::EnableAthstats (std::string filename, NodeContainer n)
   for (NodeContainer::Iterator i = n.Begin (); i != n.End (); ++i)
     {
       Ptr<Node> node = *i;
-      for (uint32_t j = 0; j < node->GetNDevices (); ++j)
+      for (std::size_t j = 0; j < node->GetNDevices (); ++j)
         {
           devs.Add (node->GetDevice (j));
         }

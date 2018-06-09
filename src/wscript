@@ -63,7 +63,7 @@ def configure(conf):
 
     # Append blddir to the module path before recursing into modules
     blddir = os.path.abspath(os.path.join(conf.bldnode.abspath(), conf.variant))
-    conf.env.append_value('NS3_MODULE_PATH', blddir)
+    conf.env.append_value('NS3_MODULE_PATH', blddir + "/lib")
 
     for module in all_modules:
         conf.recurse(module, mandatory=False)
@@ -92,7 +92,7 @@ def create_ns3_module(bld, name, dependencies=(), test=False):
         module = bld(features='cxx cxxstlib ns3module')
     else:
         module = bld(features='cxx cxxshlib ns3module')
-    module.target = '%s/ns%s-%s%s' % (bld.srcnode.path_from(module.path), wutils.VERSION,
+    module.target = '%s/lib/ns%s-%s%s' % (bld.srcnode.path_from(module.path), wutils.VERSION,
                                        name, bld.env.BUILD_SUFFIX)
     linkflags = []
     cxxflags = []

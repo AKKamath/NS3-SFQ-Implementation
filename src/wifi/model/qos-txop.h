@@ -20,12 +20,13 @@
  *          Mirko Banchi <mk.banchi@gmail.com>
  */
 
-#ifndef EDCA_TXOP_N_H
-#define EDCA_TXOP_N_H
+#ifndef QOS_TXOP_H
+#define QOS_TXOP_H
 
 #include "ns3/traced-value.h"
 #include "block-ack-manager.h"
-#include "dca-txop.h"
+#include "txop.h"
+#include "qos-utils.h"
 
 class AmpduAggregationTest;
 
@@ -54,18 +55,39 @@ enum TypeOfStation
 };
 
 /**
+ * \brief Handle packet fragmentation and retransmissions for QoS data frames as well
+ * as MSDU aggregation (A-MSDU) and block ack sessions, for a given access class.
  * \ingroup wifi
+ *
+ * This class implements the packet fragmentation and retransmission policy for
+ * QoS data frames. It uses the ns3::MacLow and ns3::ChannelAccessManager helper classes
+ * to respectively send packets and decide when to send them. Packets are stored
+ * in a ns3::WifiMacQueue until they can be sent.
+ *
  * This queue contains packets for a particular access class.
- * possibles access classes are:
+ * Possibles access classes are:
+ *   - AC_VO : voice, tid = 6,7
+ *   - AC_VI : video, tid = 4,5
+ *   - AC_BE : best-effort, tid = 0,3
+ *   - AC_BK : background, tid = 1,2
  *
- *   -AC_VO : voice, tid = 6,7         ^
- *   -AC_VI : video, tid = 4,5         |
- *   -AC_BE : best-effort, tid = 0,3   |  priority
- *   -AC_BK : background, tid = 1,2    |
+ * This class also implements block ack sessions and MSDU aggregation (A-MSDU).
+ * If A-MSDU is enabled for that access class, it picks several packets from the
+ * queue instead of a single one and sends the aggregated packet to ns3::MacLow.
  *
- * For more details see section 9.1.3.1 in 802.11 standard.
+ * The fragmentation policy currently implemented uses a simple
+ * threshold: any packet bigger than this threshold is fragmented
+ * in fragments whose size is smaller than the threshold.
+ *
+ * The retransmission policy is also very simple: every packet is
+ * retransmitted until it is either successfully transmitted or
+ * it has been retransmitted up until the ssrc or slrc thresholds.
+ *
+ * The rts/cts policy is similar to the fragmentation policy: when
+ * a packet is bigger than a threshold, the rts/cts protocol is used.
  */
-class EdcaTxopN : public DcaTxop
+
+class QosTxop : public Txop
 {
 public:
   /// Allow test cases to access private members
@@ -79,18 +101,18 @@ public:
    */
   static TypeId GetTypeId (void);
 
-  EdcaTxopN ();
-  virtual ~EdcaTxopN ();
+  QosTxop ();
+  virtual ~QosTxop ();
 
   /**
-   * Check for EDCA.
+   * Check for QoS TXOP.
    *
-   * \returns true if EDCA.
+   * \returns true if QoS TXOP.
    */
-  bool IsEdca ();
+  bool IsQosTxop () const;
 
   /**
-   * Set WifiRemoteStationsManager this EdcaTxopN is associated to.
+   * Set WifiRemoteStationsManager this QosTxop is associated to.
    *
    * \param remoteManager WifiRemoteStationManager.
    */
@@ -356,12 +378,11 @@ public:
    * Peek in retransmit queue and get the next packet without removing it from the queue.
    *
    * \param header Wi-Fi header.
-   * \param recipient address of the recipient.
    * \param tid traffic ID.
    * \param timestamp the timestamp.
    * \returns the packet.
    */
-  Ptr<const Packet> PeekNextRetransmitPacket (WifiMacHeader &header, Mac48Address recipient, uint8_t tid, Time *timestamp);
+  Ptr<const Packet> PeekNextRetransmitPacket (WifiMacHeader &header, uint8_t tid, Time *timestamp);
   /**
    * The packet we sent was successfully received by the receiver.
    *
@@ -538,4 +559,4 @@ private:
 
 } //namespace ns3
 
-#endif /* EDCA_TXOP_N_H */
+#endif /* QOS_TXOP_H */

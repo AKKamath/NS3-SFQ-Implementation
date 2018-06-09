@@ -26,6 +26,7 @@
 
 #include "ns3/queue-disc.h"
 #include "ns3/object-factory.h"
+#include "ns3/random-variable-stream.h"
 #include <list>
 #include <map>
 
@@ -133,29 +134,15 @@ public:
   static constexpr const char* OVERLIMIT_DROP = "Overlimit drop";        //!< Overlimit dropped packets
 
 private:
-  /**
-   * \brief Set the limit of this queue disc.
-   *
-   * \param limit The limit of this queue disc.
-   * \deprecated This method will go away in future versions of ns-3.
-   * See instead SetMaxSize()
-   */
-  void SetLimit (uint32_t limit);
-
-  /**
-   * \brief Get the limit of this queue disc.
-   *
-   * \returns The limit of this queue disc.
-   * \deprecated This method will go away in future versions of ns-3.
-   * See instead GetMaxSize()
-   */
-  uint32_t GetLimit (void) const;
-
   virtual bool DoEnqueue (Ptr<QueueDiscItem>);
   virtual Ptr<QueueDiscItem> DoDequeue (void);
-  virtual Ptr<const QueueDiscItem> DoPeek (void);
   virtual bool CheckConfig (void);
   virtual void InitializeParams (void);
+  virtual void PerturbHash ();
+
+  uint32_t m_perturbation;                 //!< hash perturbation value
+  Time m_perturbTime;                      //!< interval after which perturbation takes place
+  Ptr<UniformRandomVariable> rand;         //!< random number generator for perturbation
 
   uint32_t m_flowLimit;      //!< Maximum number of packets in each flow
   uint32_t m_quantum;        //!< Allotment assigned to flows at each round

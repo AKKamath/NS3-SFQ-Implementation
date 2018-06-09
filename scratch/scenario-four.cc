@@ -308,7 +308,7 @@ main (int argc, char *argv[])
   NS_LOG_INFO ("Set SFQ params");
   Config::SetDefault ("ns3::SfqQueueDisc::Flows", UintegerValue (10));
   Config::SetDefault ("ns3::SfqQueueDisc::MaxSize", StringValue ("15p"));
-  Config::SetDefault ("ns3::SfqIpv4PacketFilter::PerturbationTime", TimeValue (Seconds (25)));
+  Config::SetDefault ("ns3::SfqQueueDisc::PerturbationTime", TimeValue (Seconds (25)));
 
   NS_LOG_INFO ("Install internet stack on all nodes.");
   InternetStackHelper internet;
@@ -320,8 +320,6 @@ main (int argc, char *argv[])
 
   TrafficControlHelper tchSfq;
   tchSfq.SetRootQueueDisc ("ns3::SfqQueueDisc");
-  tchSfq.AddPacketFilter (handle,"ns3::SfqIpv4PacketFilter");
-  tchSfq.AddPacketFilter (handle,"ns3::SfqIpv6PacketFilter");
 
   NS_LOG_INFO ("Create channels");
   PointToPointHelper p2p;
