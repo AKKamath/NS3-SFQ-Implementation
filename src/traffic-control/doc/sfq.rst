@@ -87,14 +87,15 @@ Validation
 
 The Sfq model is tested using :cpp:class:`SfqQueueDiscTestSuite` class defined in `src/traffic-control/test/sfq-queue-disc-test-suite.cc`.  The suite includes 10 test cases:
 
-* Test 1: The first test checks that IPv4 packets having distinct destination addresses are enqueued into different flow queues, and that the flows correctly drop packets when limits are reached. It also ensures dequeuing from an empty queue returns 0.
-* Test 2: The second test checks that TCP packets with distinct destination addresses are enqueued into different flow queues.
-* Test 3: The third test checks that UDP packets with distinct destination addresses are enqueued into different flow queues.
-* Test 4: The fourth test checks the dequeue operation and the deficit round robin-based scheduler.
-* Test 5: The fifth test checks that similar packets are enqueued into different flows after the perturbation time is reached.
-* Test 6: The sixth test checks for ns-2 style implementation that IPv4 packets having distinct destination addresses are enqueued into different flow queues, and that the flows correctly drop packets when limits are reached. It also ensures dequeuing from an empty queue returns 0.
-* Test 7: The seventh test checks for ns-2 style implementation that TCP packets with distinct destination addresses are enqueued into different flow queues.
-* Test 8: The eighth test checks for ns-2 style implementation that UDP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 1: The first test ensures that packets without a proper packet filter are inserted into a seperate flow.
+* Test 2: The second test checks that IPv4 packets having distinct destination addresses are enqueued into different flow queues, and that the flows correctly drop packets when limits are reached. It also ensures dequeuing from an empty queue returns 0.
+* Test 3: The third test checks that TCP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 4: The fourth test checks that UDP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 5: The fifth test checks the dequeue operation and the deficit round robin-based scheduler.
+* Test 6: The sixth test checks that similar packets are enqueued into different flows after the perturbation time is reached.
+* Test 7: The seventh test checks for ns-2 style implementation that IPv4 packets having distinct destination addresses are enqueued into different flow queues, and that the flows correctly drop packets when limits are reached. It also ensures dequeuing from an empty queue returns 0.
+* Test 8: The eighth test checks for ns-2 style implementation that TCP packets with distinct destination addresses are enqueued into different flow queues.
+* Test 9: The ninth test checks for ns-2 style implementation that UDP packets with distinct destination addresses are enqueued into different flow queues.
 
 The test suite can be run using the following commands::
 
